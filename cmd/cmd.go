@@ -8,6 +8,7 @@ import (
 func New() *cobra.Command {
 	return newRootCmd(
 		newProveCmd(newCropCmd()),
+		newVerifyCmd(newVerifyCropCmd()),
 	)
 }
 
