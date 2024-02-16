@@ -25,7 +25,9 @@ func newVerifyCmd(cmds ...*cobra.Command) *cobra.Command {
 
 // verifyCropConfig specifies the verification configuration for cropping an image.
 type verifyCropConfig struct {
-	proofDir string
+	proofDir    string
+	originalImg string
+	croppedImg  string
 }
 
 // newVerifyCropCmd returns a new cobra.Command for cropping.
@@ -40,16 +42,16 @@ func newVerifyCropCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
+	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
+	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: PNG.")
 
 	return cmd
 }
 
 // verifyCrop verifies the zk proof of crop transformation.
 func verifyCrop(ctx context.Context, config verifyCropConfig) error {
-	originalImgPath := path.Join(config.proofDir, "original.png")
-
 	// Open the original image file.
-	originalImage, err := os.Open(originalImgPath)
+	originalImage, err := os.Open(config.originalImg)
 	if err != nil {
 		return err
 	}
@@ -61,10 +63,8 @@ func verifyCrop(ctx context.Context, config verifyCropConfig) error {
 		return err
 	}
 
-	croppedImgPath := path.Join(config.proofDir, "cropped.png")
-
 	// Open the cropped image file.
-	croppedImage, err := os.Open(croppedImgPath)
+	croppedImage, err := os.Open(config.croppedImg)
 	if err != nil {
 		return err
 	}
@@ -81,17 +81,17 @@ func verifyCrop(ctx context.Context, config verifyCropConfig) error {
 		Cropped:  convertToFrontendVariable(croppedPixels),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	proof, err := readProof(path.Join(config.proofDir, "proof.bin"))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	vk, err := readVerifyingKey(path.Join(config.proofDir, "vkey.bin"))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = groth16.Verify(proof, vk, witness)
@@ -106,10 +106,34 @@ func verifyCrop(ctx context.Context, config verifyCropConfig) error {
 
 // readProof returns the zk proof by reading it from the disk.
 func readProof(proofPath string) (groth16.Proof, error) {
-	return nil, nil
+	file, err := os.Open(proofPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	resp := groth16.NewProof(ecc.BN254)
+	_, err = resp.ReadFrom(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // readVerifyingKey returns the verifying key by reading it from the disk.
 func readVerifyingKey(verifyingKeyPath string) (groth16.VerifyingKey, error) {
-	return nil, nil
+	file, err := os.Open(verifyingKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	resp := groth16.NewVerifyingKey(ecc.BN254)
+	_, err = resp.ReadFrom(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

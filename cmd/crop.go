@@ -93,7 +93,7 @@ func proveCrop(ctx context.Context, config cropConfig) error {
 		return err
 	}
 
-	vkFile, err := os.Create(path.Join(config.proofDir, "vk.bin"))
+	vkFile, err := os.Create(path.Join(config.proofDir, "vkey.bin"))
 	if err != nil {
 		return err
 	}
@@ -163,10 +163,8 @@ func generateProof(conf cropConfig, cropped, original [][][]uint8) (groth16.Proo
 	fmt.Println("Circuit compilation time:", time.Since(t0).Seconds())
 
 	witness, err := frontend.NewWitness(&Circuit{
-		Original:       convertToFrontendVariable(original),
-		Cropped:        convertToFrontendVariable(cropped),
-		WidthStartNew:  frontend.Variable(conf.widthStartNew),
-		HeightStartNew: frontend.Variable(conf.heightStartNew),
+		Original: convertToFrontendVariable(original),
+		Cropped:  convertToFrontendVariable(cropped),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
 		return nil, nil, err
@@ -197,10 +195,8 @@ func generateProof(conf cropConfig, cropped, original [][][]uint8) (groth16.Proo
 
 // Circuit represents the arithmetic circuit to prove crop transformations.
 type Circuit struct {
-	Original       [][][]frontend.Variable `gnark:",public"`
-	Cropped        [][][]frontend.Variable `gnark:",public"`
-	WidthStartNew  frontend.Variable       `gnark:",public"`
-	HeightStartNew frontend.Variable       `gnark:",public"`
+	Original [][][]frontend.Variable `gnark:",public"`
+	Cropped  [][][]frontend.Variable `gnark:",public"`
 }
 
 func (c *Circuit) Define(api frontend.API) error {
