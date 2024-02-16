@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
-	"github.com/consensys/gnark/backend/plonkfri"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/spf13/cobra"
-	"image"
+	"image/png"
 	"io"
 	"os"
+	"path"
 	"time"
 )
 
@@ -21,6 +21,7 @@ type cropConfig struct {
 	croppedImg     string
 	widthStartNew  uint
 	heightStartNew uint
+	proofDir       string
 }
 
 // newCropCmd returns a new cobra.Command for cropping.
@@ -41,10 +42,11 @@ func newCropCmd() *cobra.Command {
 
 // bindFlags binds the crop configuration flags.
 func bindFlags(cmd *cobra.Command, conf *cropConfig) {
-	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: JPG.")
-	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: JPG.")
+	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
+	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: PNG.")
 	cmd.Flags().UintVar(&conf.widthStartNew, "width-start-new", 0, "The Original-coordinate for the top-left corner of the cropped image, relative to the original image's width.")
 	cmd.Flags().UintVar(&conf.heightStartNew, "height-start-new", 0, "The Cropped-coordinate for the top-left corner of the cropped image, relative to the original image's height.")
+	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
 }
 
 // proveCrop generates the zk proof of crop transformation.
@@ -75,7 +77,29 @@ func proveCrop(ctx context.Context, config cropConfig) error {
 		return err
 	}
 
-	_, err = generateProof(config, croppedPixels, originalPixels)
+	proof, vk, err := generateProof(config, croppedPixels, originalPixels)
+	if err != nil {
+		return err
+	}
+
+	proofFile, err := os.Create(path.Join(config.proofDir, "proof.bin"))
+	if err != nil {
+		return err
+	}
+	defer proofFile.Close()
+
+	_, err = proof.WriteTo(proofFile)
+	if err != nil {
+		return err
+	}
+
+	vkFile, err := os.Create(path.Join(config.proofDir, "vk.bin"))
+	if err != nil {
+		return err
+	}
+	defer vkFile.Close()
+
+	_, err = vk.WriteTo(vkFile)
 	if err != nil {
 		return err
 	}
@@ -86,7 +110,7 @@ func proveCrop(ctx context.Context, config cropConfig) error {
 // convertImgToPixels returns a 3D array of pixel values for the provided image.
 func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 	// Decode the image.
-	img, _, err := image.Decode(file)
+	img, err := png.Decode(file)
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +136,7 @@ func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 }
 
 // generateProof returns the proof of crop transformation.
-func generateProof(conf cropConfig, cropped, original [][][]uint8) (plonkfri.Proof, error) {
-	fmt.Println("Generate proof called!!", conf)
-
+func generateProof(conf cropConfig, cropped, original [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
 	var circuit Circuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -147,30 +169,30 @@ func generateProof(conf cropConfig, cropped, original [][][]uint8) (plonkfri.Pro
 		HeightStartNew: frontend.Variable(conf.heightStartNew),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
 	pk, vk, err := groth16.Setup(cs)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
 	t0 = time.Now()
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
 	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
 
-	err = groth16.Verify(proof, vk, witness)
-	if err != nil {
-		fmt.Println("invalid proof 😞")
-	} else {
-		fmt.Println("proof verified 🎉")
-	}
+	//err = groth16.Verify(proof, vk, witness)
+	//if err != nil {
+	//	fmt.Println("invalid proof 😞")
+	//} else {
+	//	fmt.Println("proof verified 🎉")
+	//}
 
-	return nil, nil
+	return proof, vk, nil
 }
 
 // Circuit represents the arithmetic circuit to prove crop transformations.
@@ -182,16 +204,6 @@ type Circuit struct {
 }
 
 func (c *Circuit) Define(api frontend.API) error {
-	// widthStartNew, ok := c.WidthStartNew.(int)
-	// if !ok {
-	// 	return errors.New("invalid type")
-	// }
-	//
-	// heightStartNew, ok := c.HeightStartNew.(int)
-	// if !ok {
-	// 	return errors.New("invalid type")
-	// }
-
 	heightStartNew := 0
 	widthStartNew := 0
 
