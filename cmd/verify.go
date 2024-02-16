@@ -84,12 +84,12 @@ func verifyCrop(ctx context.Context, config verifyCropConfig) error {
 		panic(err)
 	}
 
-	proof, err := readProof(path.Join(config.proofDir, "zkproof"))
+	proof, err := readProof(path.Join(config.proofDir, "proof.bin"))
 	if err != nil {
 		panic(err)
 	}
 
-	vk, err := readVerifyingKey(path.Join(config.proofDir, "vkey"))
+	vk, err := readVerifyingKey(path.Join(config.proofDir, "vkey.bin"))
 	if err != nil {
 		panic(err)
 	}
