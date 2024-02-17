@@ -7,7 +7,24 @@ import (
 )
 
 func TestVerifyCrop(t *testing.T) {
-	conf := verifyCropConfig{}
-	err := verifyCrop(context.Background(), conf)
+	proofDir := t.TempDir()
+	conf := cropConfig{
+		originalImg:    "../sample/original.png",
+		croppedImg:     "../sample/cropped.png",
+		widthStartNew:  0,
+		heightStartNew: 0,
+		proofDir:       proofDir,
+	}
+
+	err := proveCrop(context.Background(), conf)
+	require.NoError(t, err)
+
+	verifyConf := verifyCropConfig{
+		originalImg: "../sample/original.png",
+		croppedImg:  "../sample/cropped.png",
+		proofDir:    proofDir,
+	}
+
+	err = verifyCrop(context.Background(), verifyConf)
 	require.NoError(t, err)
 }

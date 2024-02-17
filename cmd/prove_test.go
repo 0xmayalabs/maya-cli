@@ -9,11 +9,11 @@ import (
 
 func TestProveCrop(t *testing.T) {
 	conf := cropConfig{
-		originalImg:    "original.png",
-		croppedImg:     "cropped.png",
+		originalImg:    "../sample/original.png",
+		croppedImg:     "../sample/cropped.png",
 		widthStartNew:  0,
 		heightStartNew: 0,
-		proofDir:       ".",
+		proofDir:       t.TempDir(),
 	}
 
 	err := proveCrop(context.Background(), conf)
@@ -21,7 +21,7 @@ func TestProveCrop(t *testing.T) {
 }
 
 func TestImgToPixel(t *testing.T) {
-	originalImage, err := os.Open("original.png")
+	originalImage, err := os.Open("../sample/original.png")
 	require.NoError(t, err)
 	defer originalImage.Close()
 
