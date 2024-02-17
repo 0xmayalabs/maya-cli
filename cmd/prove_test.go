@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -16,7 +15,7 @@ func TestProveCrop(t *testing.T) {
 		proofDir:       ".",
 	}
 
-	err := proveCrop(context.Background(), conf)
+	err := proveCrop(conf)
 	require.NoError(t, err)
 }
 
