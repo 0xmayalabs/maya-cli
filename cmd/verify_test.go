@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -16,15 +15,14 @@ func TestVerifyCrop(t *testing.T) {
 		proofDir:       proofDir,
 	}
 
-	err := proveCrop(context.Background(), conf)
+	err := proveCrop(conf)
 	require.NoError(t, err)
 
 	verifyConf := verifyCropConfig{
-		originalImg: "../sample/original.png",
-		croppedImg:  "../sample/cropped.png",
-		proofDir:    proofDir,
+		croppedImg: "../sample/cropped.png",
+		proofDir:   proofDir,
 	}
 
-	err = verifyCrop(context.Background(), verifyConf)
+	err = verifyCrop(verifyConf)
 	require.NoError(t, err)
 }

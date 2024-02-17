@@ -29,7 +29,7 @@ Time taken to prove:  0.003019167
 
 ## To verify a crop transformation
 ```shell
-project-maya verify crop --cropped-image=./sample/cropped.png  --original-image=./sample/original.png --proof-dir=proofs/
+project-maya verify crop --cropped-image=./sample/cropped.png --proof-dir=proofs/
 ```
 
 You would get output like this:
