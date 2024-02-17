@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
@@ -25,9 +24,8 @@ func newVerifyCmd(cmds ...*cobra.Command) *cobra.Command {
 
 // verifyCropConfig specifies the verification configuration for cropping an image.
 type verifyCropConfig struct {
-	proofDir    string
-	originalImg string
-	croppedImg  string
+	proofDir   string
+	croppedImg string
 }
 
 // newVerifyCropCmd returns a new cobra.Command for cropping.
@@ -37,32 +35,18 @@ func newVerifyCropCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "crop",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return verifyCrop(cmd.Context(), conf)
+			return verifyCrop(conf)
 		},
 	}
 
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
-	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: PNG.")
 
 	return cmd
 }
 
 // verifyCrop verifies the zk proof of crop transformation.
-func verifyCrop(ctx context.Context, config verifyCropConfig) error {
-	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
-	if err != nil {
-		return err
-	}
-	defer originalImage.Close()
-
-	// Get the pixel values for the original image.
-	originalPixels, err := convertImgToPixels(originalImage)
-	if err != nil {
-		return err
-	}
-
+func verifyCrop(config verifyCropConfig) error {
 	// Open the cropped image file.
 	croppedImage, err := os.Open(config.croppedImg)
 	if err != nil {
@@ -77,8 +61,7 @@ func verifyCrop(ctx context.Context, config verifyCropConfig) error {
 	}
 
 	witness, err := frontend.NewWitness(&Circuit{
-		Original: convertToFrontendVariable(originalPixels),
-		Cropped:  convertToFrontendVariable(croppedPixels),
+		Cropped: convertToFrontendVariable(croppedPixels),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
 		return err
@@ -94,7 +77,12 @@ func verifyCrop(ctx context.Context, config verifyCropConfig) error {
 		return err
 	}
 
-	err = groth16.Verify(proof, vk, witness)
+	publicWitness, err := witness.Public()
+	if err != nil {
+		return err
+	}
+
+	err = groth16.Verify(proof, vk, publicWitness)
 	if err != nil {
 		fmt.Println("Invalid proof 😞")
 	} else {

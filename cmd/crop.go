@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
@@ -31,7 +30,7 @@ func newCropCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "crop",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return proveCrop(cmd.Context(), conf)
+			return proveCrop(conf)
 		},
 	}
 
@@ -50,7 +49,7 @@ func bindFlags(cmd *cobra.Command, conf *cropConfig) {
 }
 
 // proveCrop generates the zk proof of crop transformation.
-func proveCrop(ctx context.Context, config cropConfig) error {
+func proveCrop(config cropConfig) error {
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
 	if err != nil {
@@ -77,7 +76,7 @@ func proveCrop(ctx context.Context, config cropConfig) error {
 		return err
 	}
 
-	proof, vk, err := generateProof(config, croppedPixels, originalPixels)
+	proof, vk, err := generateProof(croppedPixels, originalPixels)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 }
 
 // generateProof returns the proof of crop transformation.
-func generateProof(conf cropConfig, cropped, original [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
 	var circuit Circuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -183,36 +182,7 @@ func generateProof(conf cropConfig, cropped, original [][][]uint8) (groth16.Proo
 
 	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
 
-	//err = groth16.Verify(proof, vk, witness)
-	//if err != nil {
-	//	fmt.Println("invalid proof 😞")
-	//} else {
-	//	fmt.Println("proof verified 🎉")
-	//}
-
 	return proof, vk, nil
-}
-
-// Circuit represents the arithmetic circuit to prove crop transformations.
-type Circuit struct {
-	Original [][][]frontend.Variable `gnark:",public"`
-	Cropped  [][][]frontend.Variable `gnark:",public"`
-}
-
-func (c *Circuit) Define(api frontend.API) error {
-	heightStartNew := 0
-	widthStartNew := 0
-
-	// The pixel values for the original and cropped images must match exactly.
-	for i := 0; i < len(c.Cropped); i++ {
-		for j := 0; j < len(c.Cropped[i]); j++ {
-			api.AssertIsEqual(c.Cropped[i][j][0], c.Original[i+heightStartNew][j+widthStartNew][0]) // R
-			api.AssertIsEqual(c.Cropped[i][j][1], c.Original[i+heightStartNew][j+widthStartNew][1]) // G
-			api.AssertIsEqual(c.Cropped[i][j][2], c.Original[i+heightStartNew][j+widthStartNew][2]) // B
-		}
-	}
-
-	return nil
 }
 
 func convertToFrontendVariable(arr [][][]uint8) [][][]frontend.Variable {
