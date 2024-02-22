@@ -130,8 +130,9 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		panic(err)
 	}
 
-	fmt.Println("CropCircuit compilation time:", time.Since(t0).Seconds())
+	fmt.Println("Rotate270Circuit compilation time:", time.Since(t0).Seconds())
 
+	t0 = time.Now()
 	witness, err := frontend.NewWitness(&Rotate270Circuit{
 		Original: convertToFrontendVariable(original),
 		Rotated:  convertToFrontendVariable(rotated),
@@ -145,7 +146,6 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		return nil, nil, err
 	}
 
-	t0 = time.Now()
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
 		return nil, nil, err
@@ -171,9 +171,9 @@ func (c *Rotate270Circuit) Define(api frontend.API) error {
 	// The pixel values for the original and rotated270 images must match exactly.
 	for i := 0; i < len(c.Original); i++ {
 		for j := 0; j < len(c.Original[i]); j++ {
-			api.AssertIsEqual(c.Original[i][j][0], c.Rotated[j][i][0]) // R
-			api.AssertIsEqual(c.Original[i][j][1], c.Rotated[j][i][0]) // G
-			api.AssertIsEqual(c.Original[i][j][2], c.Rotated[j][i][0]) // B
+			api.AssertIsEqual(c.Original[i][j][0], c.Rotated[len(c.Rotated)-j-1][i][0]) // R
+			api.AssertIsEqual(c.Original[i][j][1], c.Rotated[len(c.Rotated)-j-1][i][1]) // G
+			api.AssertIsEqual(c.Original[i][j][2], c.Rotated[len(c.Rotated)-j-1][i][2]) // B
 		}
 	}
 
