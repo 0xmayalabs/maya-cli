@@ -86,10 +86,12 @@ func proveRotate90(config rotate90Config) error {
 	}
 	defer proofFile.Close()
 
-	_, err = proof.WriteTo(proofFile)
+	n, err := proof.WriteTo(proofFile)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Proof size: ", n)
 
 	vkFile, err := os.Create(path.Join(rotate90Dir, "vkey.bin"))
 	if err != nil {
@@ -130,7 +132,7 @@ func generateRotate90Proof(original, rotated [][][]uint8) (groth16.Proof, groth1
 		panic(err)
 	}
 
-	fmt.Println("CropCircuit compilation time:", time.Since(t0).Seconds())
+	fmt.Println("Rotate90 compilation time:", time.Since(t0).Seconds())
 
 	t0 = time.Now()
 	witness, err := frontend.NewWitness(&Rotate90Circuit{
@@ -193,7 +195,7 @@ func newVerifyRotate90Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "rotate90",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return verifyRotate90Crop(conf)
+			return verifyRotate90(conf)
 		},
 	}
 
@@ -203,8 +205,8 @@ func newVerifyRotate90Cmd() *cobra.Command {
 	return cmd
 }
 
-// verifyRotate90Crop verifies the zk proof of rotate90 transformation.
-func verifyRotate90Crop(config verifyRotate90Config) error {
+// verifyRotate90 verifies the zk proof of rotate90 transformation.
+func verifyRotate90(config verifyRotate90Config) error {
 	// Open the final image file.
 	finalImage, err := os.Open(config.finalImg)
 	if err != nil {
