@@ -18,8 +18,8 @@ import (
 type cropConfig struct {
 	originalImg    string
 	croppedImg     string
-	widthStartNew  uint
-	heightStartNew uint
+	widthStartNew  int
+	heightStartNew int
 	proofDir       string
 }
 
@@ -43,13 +43,16 @@ func newCropCmd() *cobra.Command {
 func bindFlags(cmd *cobra.Command, conf *cropConfig) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: PNG.")
-	cmd.Flags().UintVar(&conf.widthStartNew, "width-start-new", 0, "The Original-coordinate for the top-left corner of the cropped image, relative to the original image's width.")
-	cmd.Flags().UintVar(&conf.heightStartNew, "height-start-new", 0, "The Cropped-coordinate for the top-left corner of the cropped image, relative to the original image's height.")
+	cmd.Flags().IntVar(&conf.widthStartNew, "width-start-new", 0, "The Original-coordinate for the top-left corner of the cropped image, relative to the original image's width.")
+	cmd.Flags().IntVar(&conf.heightStartNew, "height-start-new", 0, "The Cropped-coordinate for the top-left corner of the cropped image, relative to the original image's height.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
 }
 
 // proveCrop generates the zk proof of crop transformation.
 func proveCrop(config cropConfig) error {
+	widthStartNew = config.widthStartNew
+	heightStartNew = config.heightStartNew
+
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
 	if err != nil {
