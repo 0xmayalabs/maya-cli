@@ -12,38 +12,38 @@ import (
 	"time"
 )
 
-// rotate270Config specifies the configuration for rotating an image by 270 degrees.
-type rotate270Config struct {
+// flipVerticalConfig specifies the configuration for flipping an image vertically.
+type flipVerticalConfig struct {
 	originalImg string
 	finalImg    string
 	proofDir    string
 }
 
-// newRotate270Cmd returns a new cobra.Command for rotating an image by 270 degrees.
-func newRotate270Cmd() *cobra.Command {
-	var conf rotate270Config
+// newFlipVerticalCmd returns a new cobra.Command for flipping an image vertically.
+func newFlipVerticalCmd() *cobra.Command {
+	var conf flipVerticalConfig
 
 	cmd := &cobra.Command{
-		Use: "rotate270",
+		Use: "flip-vertical",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return proveRotate270(conf)
+			return proveFlipVertical(conf)
 		},
 	}
 
-	bindRotate270Flags(cmd, &conf)
+	bindFlipVerticalFlags(cmd, &conf)
 
 	return cmd
 }
 
-// bindRotate270Flags binds the rotate270 configuration flags.
-func bindRotate270Flags(cmd *cobra.Command, conf *rotate270Config) {
+// bindFlipVerticalFlags binds the flip vertical configuration flags.
+func bindFlipVerticalFlags(cmd *cobra.Command, conf *flipVerticalConfig) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
 }
 
-// proveRotate270 generates the zk proof of rotated transformation 270.
-func proveRotate270(config rotate270Config) error {
+// proveFlipVertical generates the zk proof of flip vertical transformation.
+func proveFlipVertical(config flipVerticalConfig) error {
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
 	if err != nil {
@@ -70,17 +70,17 @@ func proveRotate270(config rotate270Config) error {
 		return err
 	}
 
-	proof, vk, err := generateRotate270Proof(originalPixels, finalPixels)
+	proof, vk, err := generateFlipVerticalProof(originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
 
-	rotate270Dir := path.Join(config.proofDir, "rotate270")
-	if err = os.MkdirAll(rotate270Dir, 0o777); err != nil {
+	flipVerticalDir := path.Join(config.proofDir, "flipVertical")
+	if err = os.MkdirAll(flipVerticalDir, 0o777); err != nil {
 		return err
 	}
 
-	proofFile, err := os.Create(path.Join(rotate270Dir, "proof.bin"))
+	proofFile, err := os.Create(path.Join(flipVerticalDir, "proof.bin"))
 	if err != nil {
 		return err
 	}
@@ -91,9 +91,9 @@ func proveRotate270(config rotate270Config) error {
 		return err
 	}
 
-	fmt.Println("Proof size: ", n)
+	fmt.Println("Proof Size: ", n)
 
-	vkFile, err := os.Create(path.Join(rotate270Dir, "vkey.bin"))
+	vkFile, err := os.Create(path.Join(flipVerticalDir, "vkey.bin"))
 	if err != nil {
 		return err
 	}
@@ -107,9 +107,9 @@ func proveRotate270(config rotate270Config) error {
 	return nil
 }
 
-// generateRotate270Proof returns the proof of rotate270 transformation.
-func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
-	var circuit Rotate270Circuit
+// generateFlipVerticalProof returns the proof of flipVertical transformation.
+func generateFlipVerticalProof(original, flipped [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+	var circuit FlipVerticalCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
 		circuit.Original[i] = make([][]frontend.Variable, len(original[i])) // Second dimension
@@ -118,11 +118,11 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		}
 	}
 
-	circuit.Rotated = make([][][]frontend.Variable, len(rotated)) // First dimension
-	for i := range rotated {
-		circuit.Rotated[i] = make([][]frontend.Variable, len(rotated[i])) // Second dimension
-		for j := range circuit.Rotated[i] {
-			circuit.Rotated[i][j] = make([]frontend.Variable, len(rotated[i][j])) // Third dimension
+	circuit.Flipped = make([][][]frontend.Variable, len(flipped)) // First dimension
+	for i := range flipped {
+		circuit.Flipped[i] = make([][]frontend.Variable, len(flipped[i])) // Second dimension
+		for j := range circuit.Flipped[i] {
+			circuit.Flipped[i][j] = make([]frontend.Variable, len(flipped[i][j])) // Third dimension
 		}
 	}
 
@@ -132,12 +132,12 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		panic(err)
 	}
 
-	fmt.Println("Rotate270Circuit compilation time:", time.Since(t0).Seconds())
+	fmt.Println("flipVertical compilation time:", time.Since(t0).Seconds())
 
 	t0 = time.Now()
-	witness, err := frontend.NewWitness(&Rotate270Circuit{
+	witness, err := frontend.NewWitness(&FlipVerticalCircuit{
 		Original: convertToFrontendVariable(original),
-		Rotated:  convertToFrontendVariable(rotated),
+		Flipped:  convertToFrontendVariable(flipped),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
 		return nil, nil, err
@@ -158,44 +158,44 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 	return proof, vk, nil
 }
 
-// Rotate270Circuit represents the arithmetic circuit to prove rotate270 transformations.
-type Rotate270Circuit struct {
+// FlipVerticalCircuit represents the arithmetic circuit to prove FlipVertical transformations.
+type FlipVerticalCircuit struct {
 	Original [][][]frontend.Variable `gnark:",secret"`
-	Rotated  [][][]frontend.Variable `gnark:",public"`
+	Flipped  [][][]frontend.Variable `gnark:",public"`
 }
 
-func (c *Rotate270Circuit) Define(api frontend.API) error {
+func (c *FlipVerticalCircuit) Define(api frontend.API) error {
 	api.AssertIsDifferent(len(c.Original), 0)
-	api.AssertIsDifferent(len(c.Rotated), 0)
-	api.AssertIsEqual(len(c.Original[0]), len(c.Rotated))
-	api.AssertIsEqual(len(c.Original), len(c.Rotated[0]))
+	api.AssertIsDifferent(len(c.Flipped), 0)
+	api.AssertIsEqual(len(c.Original), len(c.Flipped))
+	api.AssertIsEqual(len(c.Original[0]), len(c.Flipped[0]))
 
-	// The pixel values for the original and rotated270 images must match exactly.
+	// The pixel values for the original and flip vertical images must match exactly.
 	for i := 0; i < len(c.Original); i++ {
 		for j := 0; j < len(c.Original[i]); j++ {
-			api.AssertIsEqual(c.Original[i][j][0], c.Rotated[len(c.Rotated)-j-1][i][0]) // R
-			api.AssertIsEqual(c.Original[i][j][1], c.Rotated[len(c.Rotated)-j-1][i][1]) // G
-			api.AssertIsEqual(c.Original[i][j][2], c.Rotated[len(c.Rotated)-j-1][i][2]) // B
+			api.AssertIsEqual(c.Original[i][j][0], c.Flipped[len(c.Flipped)-i-1][j][0]) // R
+			api.AssertIsEqual(c.Original[i][j][1], c.Flipped[len(c.Flipped)-i-1][j][1]) // G
+			api.AssertIsEqual(c.Original[i][j][2], c.Flipped[len(c.Flipped)-i-1][j][2]) // B
 		}
 	}
 
 	return nil
 }
 
-// verifyRotate270Config specifies the verification configuration for rotating an image by 270 degrees.
-type verifyRotate270Config struct {
+// verifyFlipVerticalConfig specifies the verification configuration for rotating an image by 270 degrees.
+type verifyFlipVerticalConfig struct {
 	proofDir string
 	finalImg string
 }
 
-// newVerifyRotate270Cmd returns a new cobra.Command for rotating an image by 270 degrees.
-func newVerifyRotate270Cmd() *cobra.Command {
-	var conf verifyRotate270Config
+// newVerifyFlipVerticalCmd returns a new cobra.Command for rotating an image by 270 degrees.
+func newVerifyFlipVerticalCmd() *cobra.Command {
+	var conf verifyFlipVerticalConfig
 
 	cmd := &cobra.Command{
-		Use: "rotate270",
+		Use: "flip-vertical",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return verifyRotate270(conf)
+			return verifyFlipVertical(conf)
 		},
 	}
 
@@ -205,8 +205,8 @@ func newVerifyRotate270Cmd() *cobra.Command {
 	return cmd
 }
 
-// verifyRotate270 verifies the zk proof of rotate270 transformation.
-func verifyRotate270(config verifyRotate270Config) error {
+// verifyFlipVertical verifies the zk proof of flip vertical transformation.
+func verifyFlipVertical(config verifyFlipVerticalConfig) error {
 	// Open the final image file.
 	finalImage, err := os.Open(config.finalImg)
 	if err != nil {
@@ -220,24 +220,24 @@ func verifyRotate270(config verifyRotate270Config) error {
 		return err
 	}
 
-	witness, err := frontend.NewWitness(&Rotate270Circuit{
-		Rotated: convertToFrontendVariable(finalPixels),
+	witness, err := frontend.NewWitness(&FlipVerticalCircuit{
+		Flipped: convertToFrontendVariable(finalPixels),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
 		return err
 	}
 
-	rotate270Dir := path.Join(config.proofDir, "rotate270")
-	if err = os.MkdirAll(rotate270Dir, 0o777); err != nil {
+	flipVerticalDir := path.Join(config.proofDir, "flipVertical")
+	if err = os.MkdirAll(flipVerticalDir, 0o777); err != nil {
 		return err
 	}
 
-	proof, err := readProof(path.Join(rotate270Dir, "proof.bin"))
+	proof, err := readProof(path.Join(flipVerticalDir, "proof.bin"))
 	if err != nil {
 		return err
 	}
 
-	vk, err := readVerifyingKey(path.Join(rotate270Dir, "vkey.bin"))
+	vk, err := readVerifyingKey(path.Join(flipVerticalDir, "vkey.bin"))
 	if err != nil {
 		return err
 	}

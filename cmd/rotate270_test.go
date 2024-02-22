@@ -21,6 +21,6 @@ func TestRotate270(t *testing.T) {
 		proofDir: proofDir,
 	}
 
-	err = verifyRotate270Crop(verifyConf)
+	err = verifyRotate270(verifyConf)
 	require.NoError(t, err)
 }
