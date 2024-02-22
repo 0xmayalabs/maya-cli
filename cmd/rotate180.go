@@ -130,7 +130,7 @@ func generateRotate180Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		panic(err)
 	}
 
-	fmt.Println("Circuit compilation time:", time.Since(t0).Seconds())
+	fmt.Println("CropCircuit compilation time:", time.Since(t0).Seconds())
 
 	witness, err := frontend.NewWitness(&Rotate90Circuit{
 		Original: convertToFrontendVariable(original),
@@ -182,27 +182,6 @@ func (c *Rotate180Circuit) Define(api frontend.API) error {
 
 	return nil
 }
-
-func is180DegreeRotation(arr1, arr2 [][][]int) bool {
-	if len(arr1) == 0 || len(arr2) == 0 || len(arr1) != len(arr2) || len(arr1[0]) != len(arr2[0]) {
-		return false
-	}
-
-	rows := len(arr1)
-	cols := len(arr1[0])
-
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
-			if arr1[i][j][0] != arr2[rows-1-i][cols-1-j][0] { // Assuming 3rd dimension has at least 1 element
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
-// VERIFICATION CODE
 
 // verifyRotate180Config specifies the verification configuration for rotating an image by 180 degrees.
 type verifyRotate180Config struct {

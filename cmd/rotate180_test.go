@@ -6,9 +6,11 @@ import (
 )
 
 func TestRotate180(t *testing.T) {
+	proofDir := t.TempDir()
 	conf := rotate180Config{
 		originalImg: "../sample/original.png",
 		finalImg:    "../sample/rotated180.png",
+		proofDir:    proofDir,
 	}
 
 	err := proveRotate180(conf)
@@ -16,6 +18,7 @@ func TestRotate180(t *testing.T) {
 
 	verifyConf := verifyRotate180Config{
 		finalImg: "../sample/rotated180.png",
+		proofDir: proofDir,
 	}
 
 	err = verifyRotate180Crop(verifyConf)
