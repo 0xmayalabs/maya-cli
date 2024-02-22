@@ -38,7 +38,7 @@ func newRotate90Cmd() *cobra.Command {
 // bindRotate90Flags binds the rotate90 configuration flags.
 func bindRotate90Flags(cmd *cobra.Command, conf *rotate90Config) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
-	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the cropped image. Supported image formats: PNG.")
+	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
 }
 
@@ -51,12 +51,12 @@ func proveRotate90(config rotate90Config) error {
 	}
 	defer originalImage.Close()
 
-	// Open the cropped image file.
-	croppedImage, err := os.Open(config.finalImg)
+	// Open the final image file.
+	finalImage, err := os.Open(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer croppedImage.Close()
+	defer finalImage.Close()
 
 	// Get the pixel values for the original image.
 	originalPixels, err := convertImgToPixels(originalImage)
@@ -64,13 +64,13 @@ func proveRotate90(config rotate90Config) error {
 		return err
 	}
 
-	// Get the pixel values for the cropped image.
-	croppedPixels, err := convertImgToPixels(croppedImage)
+	// Get the pixel values for the final image.
+	finalPixels, err := convertImgToPixels(finalImage)
 	if err != nil {
 		return err
 	}
 
-	proof, vk, err := generateRotate90Proof(originalPixels, croppedPixels)
+	proof, vk, err := generateRotate90Proof(originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -195,4 +195,81 @@ func is90DegreeClockwiseRotation(arr1, arr2 [][][]int) bool {
 	}
 
 	return true
+}
+
+// VERIFICATION CODE
+
+// verifyRotate90Config specifies the verification configuration for rotating an image by 90 degrees.
+type verifyRotate90Config struct {
+	proofDir string
+	finalImg string
+}
+
+// newVerifyRotate90Cmd returns a new cobra.Command for rotating an image by 90 degrees.
+func newVerifyRotate90Cmd() *cobra.Command {
+	var conf verifyRotate90Config
+
+	cmd := &cobra.Command{
+		Use: "rotate90",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return verifyRotate90Crop(conf)
+		},
+	}
+
+	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
+	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
+
+	return cmd
+}
+
+// verifyRotate90Crop verifies the zk proof of rotate90 transformation.
+func verifyRotate90Crop(config verifyRotate90Config) error {
+	// Open the final image file.
+	finalImage, err := os.Open(config.finalImg)
+	if err != nil {
+		return err
+	}
+	defer finalImage.Close()
+
+	// Get the pixel values for the final image.
+	finalPixels, err := convertImgToPixels(finalImage)
+	if err != nil {
+		return err
+	}
+
+	witness, err := frontend.NewWitness(&Rotate90Circuit{
+		Rotated: convertToFrontendVariable(finalPixels),
+	}, ecc.BN254.ScalarField())
+	if err != nil {
+		return err
+	}
+
+	rotate90Dir := path.Join(config.proofDir, "rotate90")
+	if err = os.MkdirAll(rotate90Dir, 0o777); err != nil {
+		return err
+	}
+
+	proof, err := readProof(path.Join(rotate90Dir, "proof.bin"))
+	if err != nil {
+		return err
+	}
+
+	vk, err := readVerifyingKey(path.Join(rotate90Dir, "vkey.bin"))
+	if err != nil {
+		return err
+	}
+
+	publicWitness, err := witness.Public()
+	if err != nil {
+		return err
+	}
+
+	err = groth16.Verify(proof, vk, publicWitness)
+	if err != nil {
+		fmt.Println("Invalid proof 😞")
+	} else {
+		fmt.Println("Proof verified 🎉")
+	}
+
+	return nil
 }

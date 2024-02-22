@@ -13,4 +13,11 @@ func TestRotate90(t *testing.T) {
 
 	err := proveRotate90(conf)
 	require.NoError(t, err)
+
+	verifyConf := verifyRotate90Config{
+		finalImg: "../sample/rotated90.png",
+	}
+
+	err = verifyRotate90Crop(verifyConf)
+	require.NoError(t, err)
 }
