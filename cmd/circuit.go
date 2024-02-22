@@ -2,6 +2,8 @@ package cmd
 
 import "github.com/consensys/gnark/frontend"
 
+var heightStartNew, widthStartNew int
+
 // Circuit represents the arithmetic circuit to prove crop transformations.
 type Circuit struct {
 	Original [][][]frontend.Variable `gnark:",secret"`
@@ -9,9 +11,6 @@ type Circuit struct {
 }
 
 func (c *Circuit) Define(api frontend.API) error {
-	heightStartNew := 0
-	widthStartNew := 0
-
 	// The pixel values for the original and cropped images must match exactly.
 	for i := 0; i < len(c.Cropped); i++ {
 		for j := 0; j < len(c.Cropped[i]); j++ {
