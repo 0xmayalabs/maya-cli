@@ -11,11 +11,13 @@ func New() *cobra.Command {
 			newCropCmd(),
 			newRotate90Cmd(),
 			newRotate180Cmd(),
+			newRotate270Cmd(),
 		),
 		newVerifyCmd(
 			newVerifyCropCmd(),
 			newVerifyRotate90Cmd(),
 			newVerifyRotate180Cmd(),
+			newVerifyRotate270Cmd(),
 		),
 	)
 }
