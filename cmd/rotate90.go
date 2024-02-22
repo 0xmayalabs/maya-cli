@@ -130,8 +130,9 @@ func generateRotate90Proof(original, rotated [][][]uint8) (groth16.Proof, groth1
 		panic(err)
 	}
 
-	fmt.Println("Circuit compilation time:", time.Since(t0).Seconds())
+	fmt.Println("CropCircuit compilation time:", time.Since(t0).Seconds())
 
+	t0 = time.Now()
 	witness, err := frontend.NewWitness(&Rotate90Circuit{
 		Original: convertToFrontendVariable(original),
 		Rotated:  convertToFrontendVariable(rotated),
@@ -145,7 +146,6 @@ func generateRotate90Proof(original, rotated [][][]uint8) (groth16.Proof, groth1
 		return nil, nil, err
 	}
 
-	t0 = time.Now()
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
 		return nil, nil, err
@@ -179,25 +179,6 @@ func (c *Rotate90Circuit) Define(api frontend.API) error {
 
 	return nil
 }
-
-// is90DegreeClockwiseRotation is the algorithm to check if arr2 is 90 degrees rotation of arr1.
-func is90DegreeClockwiseRotation(arr1, arr2 [][][]int) bool {
-	if len(arr1) == 0 || len(arr2) == 0 || len(arr1) != len(arr2[0]) || len(arr1[0]) != len(arr2) {
-		return false
-	}
-
-	for i := range arr1 {
-		for j := range arr1[i] {
-			if arr1[i][j][0] != arr2[j][len(arr1)-1-i][0] { // Assuming 3rd dimension has at least 1 element
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
-// VERIFICATION CODE
 
 // verifyRotate90Config specifies the verification configuration for rotating an image by 90 degrees.
 type verifyRotate90Config struct {
