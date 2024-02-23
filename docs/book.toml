@@ -1,0 +1,6 @@
+[book]
+authors = ["Abhishek Kumar","Dhruv Bodani"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Maya Docs"

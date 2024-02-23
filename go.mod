@@ -1,4 +1,4 @@
-module github.com/twindevs/project-maya
+module github.com/LabsMaya/maya-cli
 
 go 1.21
 
