@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const MaxPixelValue = 255
+
 var brighteningFactor int
 
 // brightenConfig specifies the configuration for brightening an image by a brightening factor.
@@ -173,15 +175,31 @@ type brightenCircuit struct {
 
 func (c *brightenCircuit) Define(api frontend.API) error {
 	api.AssertIsEqual(len(c.Original), len(c.Brightened))
+	api.AssertIsEqual(len(c.Original[0]), len(c.Brightened[0]))
+	api.AssertIsEqual(len(c.Original[0][0]), len(c.Brightened[0][0]))
 
 	// The pixel values for the original and brightened images must match exactly.
-	for i := 0; i < len(c.Original[0]); i++ { // Columns
-		for j := 0; j < len(c.Original); j++ { // Rows
-			api.AssertIsEqual(len(c.Original[j][i]), len(c.Brightened[j][i]))
+	for i := 0; i < len(c.Original); i++ {
+		for j := 0; j < len(c.Original[0]); j++ {
+			// TODO(xenowits): Add MinPixelValue
+			r := api.Add(c.Original[i][j][0], brighteningFactor)
+			if api.Cmp(r, MaxPixelValue) != -1 { // r >= 255
+				r = frontend.Variable(MaxPixelValue) // if r > 255; clamp r at 255
+			}
 
-			api.AssertIsEqual(c.Brightened[j][i][0], api.Add(c.Original[j][i][0], brighteningFactor)) // R
-			api.AssertIsEqual(c.Brightened[j][i][1], api.Add(c.Original[j][i][1], brighteningFactor)) // G
-			api.AssertIsEqual(c.Brightened[j][i][2], api.Add(c.Original[j][i][2], brighteningFactor)) // B
+			g := api.Add(c.Original[i][j][1], brighteningFactor)
+			if api.Cmp(g, MaxPixelValue) != -1 { // g >= 255
+				g = frontend.Variable(MaxPixelValue) // if g > 255; clamp g at 255
+			}
+
+			b := api.Add(c.Original[i][j][2], brighteningFactor)
+			if api.Cmp(b, MaxPixelValue) != -1 { // b >= 255
+				b = frontend.Variable(MaxPixelValue) // if b > 255; clamp b at 255
+			}
+
+			api.AssertIsEqual(c.Brightened[i][j][0], r) // R
+			api.AssertIsEqual(c.Brightened[i][j][1], g) // G
+			api.AssertIsEqual(c.Brightened[i][j][2], b) // B
 		}
 	}
 
