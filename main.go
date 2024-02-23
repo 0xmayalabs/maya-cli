@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/twindevs/project-maya/cmd"
+	"github.com/LabsMaya/maya-cli/cmd"
 	"log/slog"
 	"os"
 	"os/signal"
