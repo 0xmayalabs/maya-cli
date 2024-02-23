@@ -2,5 +2,6 @@
 authors = ["Abhishek Kumar","Dhruv Bodani"]
 language = "en"
 multilingual = false
-src = "src"
+src = "book"
 title = "Maya Docs"
+description = "A book on all things maya"
