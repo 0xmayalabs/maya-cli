@@ -33,13 +33,13 @@ func newBrightenCmd() *cobra.Command {
 		},
 	}
 
-	bindbrightenFlags(cmd, &conf)
+	bindBrightenFlags(cmd, &conf)
 
 	return cmd
 }
 
-// bindbrightenFlags binds the brighten configuration flags.
-func bindbrightenFlags(cmd *cobra.Command, conf *brightenConfig) {
+// bindBrightenFlags binds the brightening configuration flags.
+func bindBrightenFlags(cmd *cobra.Command, conf *brightenConfig) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
@@ -48,6 +48,8 @@ func bindbrightenFlags(cmd *cobra.Command, conf *brightenConfig) {
 // proveBrighten generates the zk proof of brightening an image by a brightening factor.
 func proveBrighten(config brightenConfig) error {
 	brighteningFactor = config.brighteningFactor
+
+	fmt.Println("Brightening factor", brighteningFactor)
 
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
@@ -177,9 +179,9 @@ func (c *brightenCircuit) Define(api frontend.API) error {
 		for j := 0; j < len(c.Original); j++ { // Rows
 			api.AssertIsEqual(len(c.Original[j][i]), len(c.Brightened[j][i]))
 
-			api.AssertIsEqual(c.Brightened[j][i][0], api.Mul(c.Original[j][i][0], brighteningFactor)) // R
-			api.AssertIsEqual(c.Brightened[j][i][1], api.Mul(c.Original[j][i][1], brighteningFactor)) // G
-			api.AssertIsEqual(c.Brightened[j][i][2], api.Mul(c.Original[j][i][2], brighteningFactor)) // B
+			api.AssertIsEqual(c.Brightened[j][i][0], api.Add(c.Original[j][i][0], brighteningFactor)) // R
+			api.AssertIsEqual(c.Brightened[j][i][1], api.Add(c.Original[j][i][1], brighteningFactor)) // G
+			api.AssertIsEqual(c.Brightened[j][i][2], api.Add(c.Original[j][i][2], brighteningFactor)) // B
 		}
 	}
 
