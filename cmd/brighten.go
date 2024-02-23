@@ -12,7 +12,10 @@ import (
 	"time"
 )
 
-const MaxPixelValue = 255
+const (
+	MinPixelValue = 0
+	MaxPixelValue = 255
+)
 
 var brighteningFactor int
 
@@ -181,20 +184,25 @@ func (c *brightenCircuit) Define(api frontend.API) error {
 	// The pixel values for the original and brightened images must match exactly.
 	for i := 0; i < len(c.Original); i++ {
 		for j := 0; j < len(c.Original[0]); j++ {
-			// TODO(xenowits): Add MinPixelValue
 			r := api.Add(c.Original[i][j][0], brighteningFactor)
 			if api.Cmp(r, MaxPixelValue) != -1 { // r >= 255
 				r = frontend.Variable(MaxPixelValue) // if r > 255; clamp r at 255
+			} else if api.Cmp(r, MinPixelValue) == -1 { // r < 0
+				r = frontend.Variable(MinPixelValue)
 			}
 
 			g := api.Add(c.Original[i][j][1], brighteningFactor)
 			if api.Cmp(g, MaxPixelValue) != -1 { // g >= 255
 				g = frontend.Variable(MaxPixelValue) // if g > 255; clamp g at 255
+			} else if api.Cmp(g, MinPixelValue) == -1 {
+				g = frontend.Variable(MinPixelValue)
 			}
 
 			b := api.Add(c.Original[i][j][2], brighteningFactor)
 			if api.Cmp(b, MaxPixelValue) != -1 { // b >= 255
 				b = frontend.Variable(MaxPixelValue) // if b > 255; clamp b at 255
+			} else if api.Cmp(b, MinPixelValue) == -1 {
+				b = frontend.Variable(MinPixelValue)
 			}
 
 			api.AssertIsEqual(c.Brightened[i][j][0], r) // R
