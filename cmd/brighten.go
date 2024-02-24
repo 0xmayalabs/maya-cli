@@ -6,6 +6,7 @@ import (
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
+	"github.com/consensys/gnark/std/math/cmp"
 	"github.com/spf13/cobra"
 	"os"
 	"path"
@@ -185,29 +186,17 @@ func (c *brightenCircuit) Define(api frontend.API) error {
 	for i := 0; i < len(c.Original); i++ {
 		for j := 0; j < len(c.Original[0]); j++ {
 			r := api.Add(c.Original[i][j][0], brighteningFactor)
-			if api.Cmp(r, MaxPixelValue) != -1 { // r >= 255
-				r = frontend.Variable(MaxPixelValue) // if r > 255; clamp r at 255
-			} else if api.Cmp(r, MinPixelValue) == -1 { // r < 0
-				r = frontend.Variable(MinPixelValue)
-			}
+			r1 := api.Select(cmp.IsLess(api, r, MaxPixelValue), r, MaxPixelValue)
 
 			g := api.Add(c.Original[i][j][1], brighteningFactor)
-			if api.Cmp(g, MaxPixelValue) != -1 { // g >= 255
-				g = frontend.Variable(MaxPixelValue) // if g > 255; clamp g at 255
-			} else if api.Cmp(g, MinPixelValue) == -1 {
-				g = frontend.Variable(MinPixelValue)
-			}
+			g1 := api.Select(cmp.IsLess(api, g, MaxPixelValue), g, MaxPixelValue)
 
 			b := api.Add(c.Original[i][j][2], brighteningFactor)
-			if api.Cmp(b, MaxPixelValue) != -1 { // b >= 255
-				b = frontend.Variable(MaxPixelValue) // if b > 255; clamp b at 255
-			} else if api.Cmp(b, MinPixelValue) == -1 {
-				b = frontend.Variable(MinPixelValue)
-			}
+			b1 := api.Select(cmp.IsLess(api, b, MaxPixelValue), b, MaxPixelValue)
 
-			api.AssertIsEqual(c.Brightened[i][j][0], r) // R
-			api.AssertIsEqual(c.Brightened[i][j][1], g) // G
-			api.AssertIsEqual(c.Brightened[i][j][2], b) // B
+			api.AssertIsEqual(c.Brightened[i][j][0], r1) // R
+			api.AssertIsEqual(c.Brightened[i][j][1], g1) // G
+			api.AssertIsEqual(c.Brightened[i][j][2], b1) // B
 		}
 	}
 
