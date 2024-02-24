@@ -49,6 +49,7 @@ func bindBrightenFlags(cmd *cobra.Command, conf *brightenConfig) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
+	cmd.Flags().IntVar(&conf.brighteningFactor, "brightening-factor", 2, "The factor with which image is brightened.")
 }
 
 // proveBrighten generates the zk proof of brightening an image by a brightening factor.
@@ -186,17 +187,20 @@ func (c *brightenCircuit) Define(api frontend.API) error {
 	for i := 0; i < len(c.Original); i++ {
 		for j := 0; j < len(c.Original[0]); j++ {
 			r := api.Add(c.Original[i][j][0], brighteningFactor)
-			r1 := api.Select(cmp.IsLess(api, r, MaxPixelValue), r, MaxPixelValue)
+			r = api.Select(cmp.IsLess(api, r, MaxPixelValue), r, MaxPixelValue)
+			r = api.Select(cmp.IsLess(api, r, MinPixelValue), MinPixelValue, r)
 
 			g := api.Add(c.Original[i][j][1], brighteningFactor)
-			g1 := api.Select(cmp.IsLess(api, g, MaxPixelValue), g, MaxPixelValue)
+			g = api.Select(cmp.IsLess(api, g, MaxPixelValue), g, MaxPixelValue)
+			g = api.Select(cmp.IsLess(api, g, MinPixelValue), MinPixelValue, g)
 
 			b := api.Add(c.Original[i][j][2], brighteningFactor)
-			b1 := api.Select(cmp.IsLess(api, b, MaxPixelValue), b, MaxPixelValue)
+			b = api.Select(cmp.IsLess(api, b, MaxPixelValue), b, MaxPixelValue)
+			b = api.Select(cmp.IsLess(api, b, MinPixelValue), MinPixelValue, b)
 
-			api.AssertIsEqual(c.Brightened[i][j][0], r1) // R
-			api.AssertIsEqual(c.Brightened[i][j][1], g1) // G
-			api.AssertIsEqual(c.Brightened[i][j][2], b1) // B
+			api.AssertIsEqual(c.Brightened[i][j][0], r) // R
+			api.AssertIsEqual(c.Brightened[i][j][1], g) // G
+			api.AssertIsEqual(c.Brightened[i][j][2], b) // B
 		}
 	}
 

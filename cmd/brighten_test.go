@@ -21,7 +21,7 @@ func TestCreateBrighten(t *testing.T) {
 	img, err := png.Decode(inputFile)
 	require.NoError(t, err)
 
-	brightenedImg := brighten(img)
+	brightenedImg := brighten(img, 2)
 
 	outputFile, err := os.Create("../sample/brightened.png") // Output file
 	require.NoError(t, err)
@@ -64,8 +64,10 @@ func TestBrightenE2E(t *testing.T) {
 	originalImg, err := png.Decode(inputFile)
 	require.NoError(t, err)
 
+	brightenFactor := 2
+
 	// Save output file
-	brightenedImg := brighten(originalImg)
+	brightenedImg := brighten(originalImg, brightenFactor)
 	outputFile, err := os.Create(path.Join(testDir, "brightened.png")) // Output file
 	require.NoError(t, err)
 	defer outputFile.Close()
@@ -85,11 +87,10 @@ func TestBrightenE2E(t *testing.T) {
 }
 
 // brighten creates a vertically flipped version of the given image.
-func brighten(img image.Image) image.Image {
+func brighten(img image.Image, brightnessFactor int) image.Image {
 	// Create a new image for the output
 	bounds := img.Bounds()
 	brightenedImg := image.NewRGBA(bounds)
-	brightnessFactor := 2
 
 	// Iterate over each pixel to adjust brightness
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {

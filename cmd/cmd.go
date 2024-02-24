@@ -21,7 +21,7 @@ func New() *cobra.Command {
 			newVerifyRotate180Cmd(),
 			newVerifyRotate270Cmd(),
 			newVerifyFlipVerticalCmd(),
-			newVerifyBrightenCmd()
+			newVerifyBrightenCmd(),
 		),
 	)
 }
