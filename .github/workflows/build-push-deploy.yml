@@ -28,7 +28,7 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: |
-          mayalabs/maya
+          labsmaya/maya
         tags: |
           # Tag "git short sha" on all git events
           type=sha,prefix=
