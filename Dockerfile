@@ -41,9 +41,10 @@ WORKDIR "/opt/$USER"
 USER maya
 ENTRYPOINT ["/usr/local/bin/maya"]
 CMD ["run"]
+
 # Used by GitHub to associate container with repo.
-LABEL org.opencontainers.image.source="https://github.com/obolnetwork/maya"
+LABEL org.opencontainers.image.source="https://github.com/LabsMaya/maya-zk-benchmarks"
 LABEL org.opencontainers.image.title="maya"
-LABEL org.opencontainers.image.description="Proof of Stake Ethereum Distributed Validator Client"
+LABEL org.opencontainers.image.description="Media ZK Proving benchmarking"
 LABEL org.opencontainers.image.licenses="GPL v3"
-LABEL org.opencontainers.image.documentation="https://github.com/ObolNetwork/maya/tree/main/docs"
+LABEL org.opencontainers.image.documentation="https://github.com/LabsMaya/maya-docs/tree/main/docs"
