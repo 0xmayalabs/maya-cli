@@ -15,6 +15,7 @@ func New() *cobra.Command {
 			newFlipVerticalCmd(),
 			newFlipHorizontalCmd(),
 			newBrightenCmd(),
+			newContrastCmd(),
 		),
 		newVerifyCmd(
 			newVerifyCropCmd(),
@@ -24,6 +25,7 @@ func New() *cobra.Command {
 			newVerifyFlipVerticalCmd(),
 			newVerifyFlipHorizontalCmd(),
 			newVerifyBrightenCmd(),
+			newVerifyContrastCmd(),
 		),
 	)
 }

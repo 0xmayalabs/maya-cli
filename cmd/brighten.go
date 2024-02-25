@@ -18,7 +18,7 @@ const (
 	MaxPixelValue = 255
 )
 
-var brighteningFactor int
+var brightenFactor int
 
 // brightenConfig specifies the configuration for brightening an image by a brightening factor.
 type brightenConfig struct {
@@ -54,9 +54,9 @@ func bindBrightenFlags(cmd *cobra.Command, conf *brightenConfig) {
 
 // proveBrighten generates the zk proof of brightening an image by a brightening factor.
 func proveBrighten(config brightenConfig) error {
-	brighteningFactor = config.brighteningFactor
+	brightenFactor = config.brighteningFactor
 
-	fmt.Println("Brightening factor", brighteningFactor)
+	fmt.Println("Brightening factor", brightenFactor)
 
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
@@ -186,15 +186,15 @@ func (c *brightenCircuit) Define(api frontend.API) error {
 	// The pixel values for the original and brightened images must match exactly.
 	for i := 0; i < len(c.Original); i++ {
 		for j := 0; j < len(c.Original[0]); j++ {
-			r := api.Add(c.Original[i][j][0], brighteningFactor)
+			r := api.Add(c.Original[i][j][0], brightenFactor)
 			r = api.Select(cmp.IsLess(api, r, MaxPixelValue), r, MaxPixelValue)
 			r = api.Select(cmp.IsLess(api, r, MinPixelValue), MinPixelValue, r)
 
-			g := api.Add(c.Original[i][j][1], brighteningFactor)
+			g := api.Add(c.Original[i][j][1], brightenFactor)
 			g = api.Select(cmp.IsLess(api, g, MaxPixelValue), g, MaxPixelValue)
 			g = api.Select(cmp.IsLess(api, g, MinPixelValue), MinPixelValue, g)
 
-			b := api.Add(c.Original[i][j][2], brighteningFactor)
+			b := api.Add(c.Original[i][j][2], brightenFactor)
 			b = api.Select(cmp.IsLess(api, b, MaxPixelValue), b, MaxPixelValue)
 			b = api.Select(cmp.IsLess(api, b, MinPixelValue), MinPixelValue, b)
 
