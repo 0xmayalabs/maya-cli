@@ -7,15 +7,12 @@ import (
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/spf13/cobra"
-	"math/big"
 	"os"
 	"path"
 	"time"
 )
 
 var contrastFactor int
-var x = big.NewFloat(1.02)
-var xSquared *big.Float
 
 // contrastConfig specifies the configuration for contrasting an image by a contrasting factor.
 type contrastConfig struct {
@@ -54,9 +51,6 @@ func proveContrast(config contrastConfig) error {
 	contrastFactor = config.contrastFactor
 
 	fmt.Println("Contrast factor", contrastFactor)
-
-	xSquared.Mul(x, x)
-	fmt.Println("x squared", xSquared)
 
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
