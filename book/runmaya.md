@@ -6,19 +6,19 @@ Maya CLI provides commands for both `proving` an image transformation and `verif
 
 You can also look at the available transformations for `proving` by running:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove --help
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove --help
 ```
 
 Similarly, to look at the available transformations for `verifying`, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify --help
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify --help
 ```
 
 ## Crop
 
 To prove that an image is cropped correctly, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove crop \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove crop \
 --original-image=./sample/original.png \
 --cropped-image=./sample/cropped.png \
 --height-start-new=0 \
@@ -28,7 +28,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove crop \
 
 To verify that an image is cropped correctly, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify crop \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify crop \
 --cropped-image=./sample/cropped.png \
 --proof-dir=proofs
 ```
@@ -37,7 +37,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify crop \
 
 To prove that an image is correctly flipped vertically, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove flip-vertical \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove flip-vertical \
 --original-image=./sample/original.png \
 --final-image=./sample/flipped_vertical.png \
 --proof-dir=proofs
@@ -45,7 +45,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove flip-vertical \
 
 To verify that an image is correctly flipped vertically, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify flip-vertical \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify flip-vertical \
 --final-image=./sample/flipped_vertical.png \
 --proof-dir=proofs
 ```
@@ -54,7 +54,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify flip-vertical 
 
 To prove that an image is correctly flipped horizontally, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove flip-horizontal \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove flip-horizontal \
 --original-image=./sample/original.png \
 --final-image=./sample/flipped_horizontal.png \
 --proof-dir=proofs
@@ -62,7 +62,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove flip-horizontal
 
 To verify that an image is correctly flipped horizontally, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify flip-horizontal \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify flip-horizontal \
 --final-image=./sample/flipped_horizontal.png \
 --proof-dir=proofs
 ```
@@ -71,7 +71,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify flip-horizonta
 
 To prove that an image is correctly rotated by 90 degrees clockwise, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove rotate90 \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove rotate90 \
 --original-image=./sample/original.png \
 --final-image=./sample/rotated90.png \
 --proof-dir=proofs
@@ -79,7 +79,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove rotate90 \
 
 To verify that an image is correctly rotated by 90 degrees clockwise, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify rotate90 \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify rotate90 \
 --final-image=./sample/rotated90.png \
 --proof-dir=proofs
 ```
@@ -88,7 +88,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify rotate90 \
 
 To prove that an image is correctly rotated by 180 degrees clockwise, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove rotate180 \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove rotate180 \
 --original-image=./sample/original.png \
 --final-image=./sample/rotated180.png \
 --proof-dir=proofs
@@ -96,7 +96,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove rotate180 \
 
 To verify that an image is correctly rotated by 180 degrees clockwise, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify rotate180 \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify rotate180 \
 --final-image=./sample/rotated180.png \
 --proof-dir=proofs
 ```
@@ -105,7 +105,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify rotate180 \
 
 To prove that an image is correctly rotated by 270 degrees clockwise, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove rotate270 \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove rotate270 \
 --original-image=./sample/original.png \
 --final-image=./sample/rotated270.png \
 --proof-dir=proofs
@@ -113,7 +113,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove rotate270 \
 
 To verify that an image is correctly rotated by 270 degrees clockwise, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify rotate270 \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify rotate270 \
 --final-image=./sample/rotated270.png \
 --proof-dir=proofs
 ```
@@ -122,7 +122,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify rotate270 \
 
 To prove that an image is correctly brightened by a brightness factor `f`, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove brighten \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove brighten \
 --original-image=./sample/original.png \
 --final-image=./sample/rotated180.png \
 --factor=2 \
@@ -131,7 +131,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove brighten \
 
 To verify that an image is correctly brightened by a brightness factor `f`, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify brighten \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify brighten \
 --final-image=./sample/rotated180.png \
 --factor=2 \
 --proof-dir=proofs
@@ -141,7 +141,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify brighten \
 
 To prove that an image is correctly contrasted by a brightness factor `f`, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove constrast \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove constrast \
 --original-image=./sample/original.png \
 --final-image=./sample/contrasted.png \
 --factor=2 \
@@ -150,7 +150,7 @@ docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 prove constrast \
 
 To verify that an image is correctly contrasted by a brightness factor `f`, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" mayalabs/maya:v0.0.1 verify contrast \
+docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify contrast \
 --final-image=./sample/contrasted.png \
 --factor=2 \
 --proof-dir=proofs
