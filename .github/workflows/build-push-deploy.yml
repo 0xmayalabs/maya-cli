@@ -1,9 +1,16 @@
+#on:
+#  push:
+#    branches:
+#      - *
+#    tags:
+#      - 'v*'
+
 on:
   push:
-    branches:
-      - main*
-    tags:
-      - 'v*'
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
 
 name: Build and Publish Docker Image
 jobs:
@@ -21,8 +28,7 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: |
-          mayalabs/maya
-          ghcr.io/mayalabs/maya
+          labsmaya/maya
         tags: |
           # Tag "git short sha" on all git events
           type=sha,prefix=
@@ -47,7 +53,7 @@ jobs:
 #        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Login to Dockerhub container registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
