@@ -207,27 +207,6 @@ func (c *brightenCircuit) Define(api frontend.API) error {
 	return nil
 }
 
-func isBrightenedVersion(arr1, arr2 [][][]float64, value float64) bool {
-	// Check if the dimensions of both images are the same
-	if len(arr1) != len(arr2) {
-		return false
-	}
-	for x := range arr1[0] { // Swap: Iterate over x first
-		for y := range arr1 { // Swap: Then iterate over y
-			if len(arr1[y][x]) != len(arr2[y][x]) {
-				return false
-			}
-			for c := range arr1[y][x] {
-				// Check if arr2 is a brightened version of arr1 by the factor "value"
-				if arr2[y][x][c] != arr1[y][x][c]*value {
-					return false
-				}
-			}
-		}
-	}
-	return true
-}
-
 // verifyBrightenConfig specifies the verification configuration for rotating an image by 90 degrees.
 type verifyBrightenConfig struct {
 	proofDir string
