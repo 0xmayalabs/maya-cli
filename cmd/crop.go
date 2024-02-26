@@ -23,6 +23,7 @@ type cropConfig struct {
 	widthStartNew  int
 	heightStartNew int
 	proofDir       string
+	markdownFile   string
 }
 
 // newCropCmd returns a new cobra.Command for cropping.
@@ -76,12 +77,12 @@ func proveCrop(config cropConfig) error {
 	}
 
 	// Get the pixel values for the cropped image.
-	croppedPixels, err := convertImgToPixels(croppedImage)
+	finalPixels, err := convertImgToPixels(croppedImage)
 	if err != nil {
 		return err
 	}
 
-	proof, vk, err := generateProof(croppedPixels, originalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateProof(finalPixels, originalPixels)
 	if err != nil {
 		return err
 	}
@@ -92,9 +93,31 @@ func proveCrop(config cropConfig) error {
 	}
 	defer proofFile.Close()
 
-	_, err = proof.WriteTo(proofFile)
+	n, err := proof.WriteTo(proofFile)
 	if err != nil {
 		return err
+	}
+
+	fmt.Println("Proof size: ", n)
+
+	if config.markdownFile != "" {
+		mdFile, err := os.OpenFile(config.markdownFile, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		defer mdFile.Close()
+
+		if _, err = fmt.Fprintf(mdFile, "| %s | %s | %f | %f | %d |\n",
+			fmt.Sprintf("%dx%d", len(originalPixels),
+				len(originalPixels[0])),
+			fmt.Sprintf("%dx%d", len(finalPixels),
+				len(finalPixels[0])),
+			circuitCompilationDuration.Seconds(),
+			provingDuration.Seconds(),
+			n,
+		); err != nil {
+			return err
+		}
 	}
 
 	vkFile, err := os.Create(path.Join(config.proofDir, "vkey.bin"))
@@ -140,7 +163,7 @@ func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 }
 
 // generateProof returns the proof of crop transformation.
-func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
 	var circuit CropCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -165,6 +188,7 @@ func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.Verify
 	}
 
 	fmt.Printf("Crop circuit compilation time: %vs\n", time.Since(t0).Seconds())
+	circuitCompilationDuration := time.Since(t0)
 
 	t0 = time.Now()
 	witness, err := frontend.NewWitness(&CropCircuit{
@@ -172,22 +196,23 @@ func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.Verify
 		Cropped:  convertToFrontendVariable(cropped),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	pk, vk, err := groth16.Setup(cs)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Printf("Time taken to prove: %vs\n", time.Since(t0).Seconds())
+	proofDuration := time.Since(t0)
 
-	return proof, vk, nil
+	return proof, vk, circuitCompilationDuration, proofDuration, nil
 }
 
 func convertToFrontendVariable(arr [][][]uint8) [][][]frontend.Variable {
