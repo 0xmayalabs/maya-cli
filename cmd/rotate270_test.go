@@ -105,15 +105,10 @@ func rotate270Image(t *testing.T, original, final string) {
 
 	bounds := img.Bounds()
 	rotated := image.NewRGBA(image.Rect(0, 0, bounds.Dy(), bounds.Dx()))
-
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			// Calculate the new position for the pixel
-			newX := bounds.Max.Y - y - 1
-			newY := x
-
-			// Set the pixel at the new position to the value of the current pixel
-			rotated.Set(newX, newY, img.At(x, y))
+	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			srcColor := img.At(x, y)
+			rotated.Set(bounds.Max.Y-y-1, x, srcColor)
 		}
 	}
 

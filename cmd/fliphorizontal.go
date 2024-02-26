@@ -183,27 +183,6 @@ func (c *FlipHorizontalCircuit) Define(api frontend.API) error {
 	return nil
 }
 
-// isHorizontalFlip checks if arr2 is a horizontal flip of arr1
-func isHorizontalFlip(arr1, arr2 [][][]uint8) bool {
-	if len(arr1) != len(arr2) || len(arr1[0]) != len(arr2[0]) {
-		return false // Different dimensions
-	}
-
-	for y := range arr1 {
-		for x := range arr1[y] {
-			// Compare the pixel at (x, y) in arr1 with the pixel at (width-x-1, y) in arr2
-			x2 := len(arr1[y]) - 1 - x
-			for c := range arr1[y][x] {
-				if arr1[y][x][c] != arr2[y][x2][c] {
-					return false
-				}
-			}
-		}
-	}
-
-	return true
-}
-
 // verifyFlipHorizontalConfig specifies the verification configuration for rotating an image by 270 degrees.
 type verifyFlipHorizontalConfig struct {
 	proofDir string
