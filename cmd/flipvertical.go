@@ -14,9 +14,10 @@ import (
 
 // flipVerticalConfig specifies the configuration for flipping an image vertically.
 type flipVerticalConfig struct {
-	originalImg string
-	finalImg    string
-	proofDir    string
+	originalImg  string
+	finalImg     string
+	proofDir     string
+	markdownFile string
 }
 
 // newFlipVerticalCmd returns a new cobra.Command for flipping an image vertically.
@@ -70,7 +71,7 @@ func proveFlipVertical(config flipVerticalConfig) error {
 		return err
 	}
 
-	proof, vk, err := generateFlipVerticalProof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateFlipVerticalProof(originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -104,11 +105,29 @@ func proveFlipVertical(config flipVerticalConfig) error {
 		return err
 	}
 
+	if config.markdownFile != "" {
+		mdFile, err := os.OpenFile(config.markdownFile, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		defer mdFile.Close()
+
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+			fmt.Sprintf("%dx%d", len(finalPixels),
+				len(finalPixels[0])),
+			circuitCompilationDuration.Seconds(),
+			provingDuration.Seconds(),
+			n,
+		); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // generateFlipVerticalProof returns the proof of flipVertical transformation.
-func generateFlipVerticalProof(original, flipped [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+func generateFlipVerticalProof(original, flipped [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
 	var circuit FlipVerticalCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -132,7 +151,8 @@ func generateFlipVerticalProof(original, flipped [][][]uint8) (groth16.Proof, gr
 		panic(err)
 	}
 
-	fmt.Println("flipVertical compilation time:", time.Since(t0).Seconds())
+	fmt.Println("Flip vertical compilation time:", time.Since(t0).Seconds())
+	circuitCompilationDuration := time.Since(t0)
 
 	t0 = time.Now()
 	witness, err := frontend.NewWitness(&FlipVerticalCircuit{
@@ -140,22 +160,23 @@ func generateFlipVerticalProof(original, flipped [][][]uint8) (groth16.Proof, gr
 		Flipped:  convertToFrontendVariable(flipped),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	pk, vk, err := groth16.Setup(cs)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
+	proofDuration := time.Since(t0)
 
-	return proof, vk, nil
+	return proof, vk, circuitCompilationDuration, proofDuration, nil
 }
 
 // FlipVerticalCircuit represents the arithmetic circuit to prove FlipVertical transformations.
