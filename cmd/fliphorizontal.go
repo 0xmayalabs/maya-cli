@@ -14,9 +14,10 @@ import (
 
 // flipHorizontalConfig specifies the configuration for flipping an image horizontally.
 type flipHorizontalConfig struct {
-	originalImg string
-	finalImg    string
-	proofDir    string
+	originalImg  string
+	finalImg     string
+	proofDir     string
+	markdownFile string
 }
 
 // newFlipHorizontalCmd returns a new cobra.Command for flipping an image horizontally.
@@ -70,7 +71,7 @@ func proveFlipHorizontal(config flipHorizontalConfig) error {
 		return err
 	}
 
-	proof, vk, err := generateFlipHorizontalProof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateFlipHorizontalProof(originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -104,11 +105,29 @@ func proveFlipHorizontal(config flipHorizontalConfig) error {
 		return err
 	}
 
+	if config.markdownFile != "" {
+		mdFile, err := os.OpenFile(config.markdownFile, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		defer mdFile.Close()
+
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+			fmt.Sprintf("%dx%d", len(finalPixels),
+				len(finalPixels[0])),
+			circuitCompilationDuration.Seconds(),
+			provingDuration.Seconds(),
+			n,
+		); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // generateFlipHorizontalProof returns the proof of flipHorizontal transformation.
-func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
 	var circuit FlipHorizontalCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -133,6 +152,7 @@ func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, 
 	}
 
 	fmt.Println("Flip Horizontal compilation time:", time.Since(t0).Seconds())
+	circuitCompilationDuration := time.Since(t0)
 
 	t0 = time.Now()
 	witness, err := frontend.NewWitness(&FlipHorizontalCircuit{
@@ -140,22 +160,23 @@ func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, 
 		Flipped:  convertToFrontendVariable(flipped),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	pk, vk, err := groth16.Setup(cs)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
+	proofDuration := time.Since(t0)
 
-	return proof, vk, nil
+	return proof, vk, circuitCompilationDuration, proofDuration, nil
 }
 
 // FlipHorizontalCircuit represents the arithmetic circuit to prove flip horizontal transformations.
