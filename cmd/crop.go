@@ -164,8 +164,9 @@ func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.Verify
 		panic(err)
 	}
 
-	fmt.Println("CropCircuit compilation time:", time.Since(t0).Seconds())
+	fmt.Printf("Crop circuit compilation time: %vs\n", time.Since(t0).Seconds())
 
+	t0 = time.Now()
 	witness, err := frontend.NewWitness(&CropCircuit{
 		Original: convertToFrontendVariable(original),
 		Cropped:  convertToFrontendVariable(cropped),
@@ -179,13 +180,12 @@ func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.Verify
 		return nil, nil, err
 	}
 
-	t0 = time.Now()
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
+	fmt.Printf("Time taken to prove: %vs\n", time.Since(t0).Seconds())
 
 	return proof, vk, nil
 }
