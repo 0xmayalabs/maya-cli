@@ -62,7 +62,7 @@ func TestRotate90Benchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/rotate90.md"
+	mdFilePath := "../book/perf/rotate90.md"
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 
