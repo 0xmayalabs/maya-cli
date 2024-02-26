@@ -63,7 +63,7 @@ func TestCropBenchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/crop.md"
+	mdFilePath := "../book/perf/crop.md"
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 

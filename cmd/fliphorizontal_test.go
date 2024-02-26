@@ -62,7 +62,7 @@ func TestFlipHorizontalBenchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/flip-horizontal.md"
+	mdFilePath := "../book/perf/flip-horizontal.md"
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 
