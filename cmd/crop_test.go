@@ -63,6 +63,16 @@ func TestCropBenchmark(t *testing.T) {
 		},
 	}
 
+	mdFilePath := "../book/crop.md"
+	mdFile, err := os.Create(mdFilePath)
+	require.NoError(t, err)
+
+	fmt.Fprintln(mdFile, "## Crop")
+	// Write the Markdown table headers
+	fmt.Fprintln(mdFile, "| Original Size | Final Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|---|")
+	mdFile.Close()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
@@ -76,6 +86,7 @@ func TestCropBenchmark(t *testing.T) {
 				widthStartNew:  tt.widthStartNew,
 				heightStartNew: tt.heightStartNew,
 				proofDir:       dir,
+				markdownFile:   mdFilePath,
 			}
 			err := proveCrop(conf)
 			require.NoError(t, err)
