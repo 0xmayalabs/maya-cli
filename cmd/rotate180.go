@@ -14,9 +14,10 @@ import (
 
 // rotate180Config specifies the configuration for rotating an image by 180 degrees.
 type rotate180Config struct {
-	originalImg string
-	finalImg    string
-	proofDir    string
+	originalImg  string
+	finalImg     string
+	proofDir     string
+	markdownFile string
 }
 
 // newRotate180Cmd returns a new cobra.Command for rotating an image by 180 degrees.
@@ -70,7 +71,7 @@ func proveRotate180(config rotate180Config) error {
 		return err
 	}
 
-	proof, vk, err := generateRotate180Proof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateRotate180Proof(originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func proveRotate180(config rotate180Config) error {
 	}
 	defer proofFile.Close()
 
-	_, err = proof.WriteTo(proofFile)
+	n, err := proof.WriteTo(proofFile)
 	if err != nil {
 		return err
 	}
@@ -102,11 +103,31 @@ func proveRotate180(config rotate180Config) error {
 		return err
 	}
 
+	fmt.Println("Proof size: ", n)
+
+	if config.markdownFile != "" {
+		mdFile, err := os.OpenFile(config.markdownFile, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		defer mdFile.Close()
+
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+			fmt.Sprintf("%dx%d", len(finalPixels),
+				len(finalPixels[0])),
+			circuitCompilationDuration.Seconds(),
+			provingDuration.Seconds(),
+			n,
+		); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // generateRotate180Proof returns the proof of rotate180 transformation.
-func generateRotate180Proof(original, rotated [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+func generateRotate180Proof(original, rotated [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
 	var circuit Rotate180Circuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -130,30 +151,33 @@ func generateRotate180Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		panic(err)
 	}
 
-	fmt.Println("CropCircuit compilation time:", time.Since(t0).Seconds())
+	fmt.Println("Rotate180 compilation time:", time.Since(t0).Seconds())
+	circuitCompilationDuration := time.Since(t0)
 
+	t0 = time.Now()
 	witness, err := frontend.NewWitness(&Rotate90Circuit{
 		Original: convertToFrontendVariable(original),
 		Rotated:  convertToFrontendVariable(rotated),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	pk, vk, err := groth16.Setup(cs)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	t0 = time.Now()
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
+	proofDuration := time.Since(t0)
 
-	return proof, vk, nil
+	return proof, vk, circuitCompilationDuration, proofDuration, nil
 }
 
 // Rotate180Circuit represents the arithmetic circuit to prove rotate180 transformations.
