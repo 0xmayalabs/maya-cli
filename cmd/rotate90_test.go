@@ -62,6 +62,16 @@ func TestRotate90Benchmark(t *testing.T) {
 		},
 	}
 
+	mdFilePath := "../book/rotate90.md"
+	mdFile, err := os.Create(mdFilePath)
+	require.NoError(t, err)
+
+	fmt.Fprintln(mdFile, "## Rotate 90")
+	// Write the Markdown table headers
+	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|")
+	mdFile.Close()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
@@ -73,9 +83,10 @@ func TestRotate90Benchmark(t *testing.T) {
 			rotate90Image(t, croppedImg, finalImg)
 
 			conf := rotate90Config{
-				originalImg: croppedImg,
-				finalImg:    finalImg,
-				proofDir:    dir,
+				originalImg:  croppedImg,
+				finalImg:     finalImg,
+				proofDir:     dir,
+				markdownFile: mdFilePath,
 			}
 			err := proveRotate90(conf)
 			require.NoError(t, err)
