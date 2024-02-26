@@ -66,6 +66,7 @@ func TestRotate90Benchmark(t *testing.T) {
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 
+	fmt.Fprintln(mdFile, "## Rotate 90")
 	// Write the Markdown table headers
 	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
 	fmt.Fprintln(mdFile, "|---|---|---|---|")
