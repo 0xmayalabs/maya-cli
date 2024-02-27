@@ -1,7 +1,6 @@
-## Maya ZK Benchmarks
+## Maya CLI
 
-This repo contains cli commands to generate and verify zero-knowledge proof of image transformation.
-This enables a verifier to verify if an image was actually transformed correctly from an original image.
+This repo contains the CLI commands to generate and verify zero-knowledge proof of image transformations.
 
 See [docs](https://docs.mayalabs.tech) for more information.
 
