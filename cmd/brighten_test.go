@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"image"
 	"image/color"
@@ -8,7 +9,139 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 )
+
+func TestBrightenBenchmark(t *testing.T) {
+	tests := []struct {
+		name           string
+		originalImg    string
+		widthStartNew  int
+		heightStartNew int
+		widthNew       int
+		heightNew      int
+	}{
+		{
+			name:           "brighten_xsmall",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       10,
+			heightNew:      10,
+		},
+		{
+			name:           "brighten_small",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       100,
+			heightNew:      100,
+		},
+		{
+			name:           "brighten_medium",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       250,
+			heightNew:      250,
+		},
+		{
+			name:           "brighten_large",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       500,
+			heightNew:      500,
+		},
+		{
+			name:           "brighten_xlarge",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       750,
+			heightNew:      750,
+		},
+	}
+
+	mdFilePath := "../book/perf/brighten.md"
+	mdFile, err := os.Create(mdFilePath)
+	require.NoError(t, err)
+
+	brightness := 2
+	fmt.Fprintln(mdFile, "## Brighten")
+	fmt.Fprintln(mdFile, fmt.Sprintf("#### Brightness factor: %d", brightness))
+
+	// Write the Markdown table headers
+	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|")
+	mdFile.Close()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+
+			croppedImg := path.Join(dir, "cropped.png")
+			cropImage(t, tt.originalImg, croppedImg, tt.widthNew, tt.heightNew)
+
+			finalImg := path.Join(dir, "final.png")
+			brightenImg(t, croppedImg, finalImg, brightness)
+
+			conf := brightenConfig{
+				originalImg:       croppedImg,
+				finalImg:          finalImg,
+				proofDir:          dir,
+				brighteningFactor: brightness,
+				markdownFile:      mdFilePath,
+			}
+			err = proveBrighten(conf)
+			require.NoError(t, err)
+		})
+	}
+}
+
+// brightenImg brightens the original image by a factor.
+func brightenImg(t *testing.T, original, final string, brightnessFactor int) {
+	t.Helper()
+
+	t0 := time.Now()
+	imgFile, err := os.Open(original)
+	require.NoError(t, err)
+	defer imgFile.Close()
+
+	img, _, err := image.Decode(imgFile)
+	require.NoError(t, err)
+
+	// Create a new image for the output
+	bounds := img.Bounds()
+	brightenedImg := image.NewRGBA(bounds)
+
+	// Iterate over each pixel to adjust brightness
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			originalColor := img.At(x, y)
+			r, g, b, a := originalColor.RGBA()
+
+			// Increase the RGB values by the brightness amount
+			// Note: RGBA() returns color components in the range [0, 65535]
+			r = min((r>>8)+uint32(brightnessFactor), 255)
+			g = min((g>>8)+uint32(brightnessFactor), 255)
+			b = min((b>>8)+uint32(brightnessFactor), 255)
+
+			// Set the new color to the pixel
+			brightenedImg.Set(x, y, color.RGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: uint8(a)})
+		}
+	}
+
+	// Create a new file to save the cropped image
+	outFile, err := os.Create(final)
+	require.NoError(t, err)
+	defer outFile.Close()
+
+	err = png.Encode(outFile, brightenedImg)
+	require.NoError(t, err)
+
+	fmt.Printf("Time taken to brighten image: %v\n", time.Now().Sub(t0))
+}
 
 func TestCreateBrighten(t *testing.T) {
 	// t.Skip()
