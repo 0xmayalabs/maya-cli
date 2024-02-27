@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"flag"
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"image"
@@ -11,6 +12,8 @@ import (
 	"testing"
 	"time"
 )
+
+var markdownFile = flag.String("markdown-file", "../book/perf/brighten.md", "Configures the markdown file to write test results.")
 
 func TestBrightenBenchmark(t *testing.T) {
 	tests := []struct {
@@ -63,7 +66,7 @@ func TestBrightenBenchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/perf/brighten.md"
+	mdFilePath := *markdownFile
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 
