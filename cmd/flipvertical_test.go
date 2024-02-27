@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func TestFlipVerticalBenchmark(t *testing.T) {
+func TestBenchmarkFlipVertical(t *testing.T) {
 	tests := []struct {
 		name           string
 		originalImg    string
@@ -62,7 +62,7 @@ func TestFlipVerticalBenchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/perf/flip-vertical.md"
+	mdFilePath := path.Join(*resultsDir, "flip-vertical.md")
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 

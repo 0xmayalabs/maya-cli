@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func TestCropBenchmark(t *testing.T) {
+func TestBenchmarkCrop(t *testing.T) {
 	tests := []struct {
 		name           string
 		originalImg    string
@@ -63,7 +63,7 @@ func TestCropBenchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/perf/crop.md"
+	mdFilePath := path.Join(*resultsDir, "crop.md")
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 
