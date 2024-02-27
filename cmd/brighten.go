@@ -26,6 +26,7 @@ type brightenConfig struct {
 	finalImg          string
 	brighteningFactor int // TODO(xenowits): Convert it to floating-point
 	proofDir          string
+	markdownFile      string
 }
 
 // newBrightenCmd returns a new cobra.Command for brightening an image by a brightening factor.
@@ -84,7 +85,7 @@ func proveBrighten(config brightenConfig) error {
 		return err
 	}
 
-	proof, vk, err := generateBrightenProof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateBrightenProof(originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -107,6 +108,24 @@ func proveBrighten(config brightenConfig) error {
 
 	fmt.Println("Proof size: ", n)
 
+	if config.markdownFile != "" {
+		mdFile, err := os.OpenFile(config.markdownFile, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		defer mdFile.Close()
+
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+			fmt.Sprintf("%dx%d", len(finalPixels),
+				len(finalPixels[0])),
+			circuitCompilationDuration.Seconds(),
+			provingDuration.Seconds(),
+			n,
+		); err != nil {
+			return err
+		}
+	}
+
 	vkFile, err := os.Create(path.Join(brightenDir, "vkey.bin"))
 	if err != nil {
 		return err
@@ -122,7 +141,7 @@ func proveBrighten(config brightenConfig) error {
 }
 
 // generateBrightenProof returns the zk proof of brightening an image by a brightening factor.
-func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, groth16.VerifyingKey, error) {
+func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
 	var circuit brightenCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -147,6 +166,7 @@ func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, gro
 	}
 
 	fmt.Println("Brighten compilation time:", time.Since(t0).Seconds())
+	circuitCompilationDuration := time.Since(t0)
 
 	t0 = time.Now()
 	witness, err := frontend.NewWitness(&brightenCircuit{
@@ -154,22 +174,23 @@ func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, gro
 		Brightened: convertToFrontendVariable(brightened),
 	}, ecc.BN254.ScalarField())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	pk, vk, err := groth16.Setup(cs)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	proof, err := groth16.Prove(cs, pk, witness)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Time taken to prove: ", time.Since(t0).Seconds())
+	proofDuration := time.Since(t0)
 
-	return proof, vk, nil
+	return proof, vk, circuitCompilationDuration, proofDuration, nil
 }
 
 // brightenCircuit represents the arithmetic circuit to prove brighten transformations.
