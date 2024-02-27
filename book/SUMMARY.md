@@ -30,3 +30,8 @@
     - [Flip Horizontal](./perf/mbp/flip-horizontal.md)
   - [AWS r6i-8xlarge](./perf/r6i-8xlarge/README.md)
     - [Crop](./perf/r6i-8xlarge/crop.md)
+    - [Rotate90](./perf/r6i-8xlarge/rotate90.md)
+    - [Rotate180](./perf/r6i-8xlarge/rotate180.md)
+    - [Rotate270](./perf/r6i-8xlarge/rotate270.md)
+    - [Flip Vertical](./perf/r6i-8xlarge/flip-vertical.md)
+    - [Flip Horizontal](./perf/r6i-8xlarge/flip-horizontal.md)
