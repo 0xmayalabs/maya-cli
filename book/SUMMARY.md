@@ -21,9 +21,10 @@
 # Performance
 
 - [Performance](perf/performance.md)
-  - [Crop](perf/crop.md)
-  - [Rotate90](perf/rotate90.md)
-  - [Rotate180](perf/rotate180.md)
-  - [Rotate270](perf/rotate270.md)
-  - [Flip Vertical](perf/flip-vertical.md)
-  - [Flip Horizontal](perf/flip-horizontal.md)
+  - [Macbook Pro M1](./perf/mbp/README.md)
+    - [Crop](./perf/mbp/crop.md)
+    - [Rotate90](./perf/mbp/rotate90.md)
+    - [Rotate180](./perf/mbp/rotate180.md)
+    - [Rotate270](./perf/mbp/rotate270.md)
+    - [Flip Vertical](./perf/mbp/flip-vertical.md)
+    - [Flip Horizontal](./perf/mbp/flip-horizontal.md)

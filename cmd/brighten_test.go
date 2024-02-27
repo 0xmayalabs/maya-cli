@@ -13,9 +13,9 @@ import (
 	"time"
 )
 
-var markdownFile = flag.String("markdown-file", "../book/perf/brighten.md", "Configures the markdown file to write test results.")
+var resultsDir = flag.String("results-dir", "../book/perf/r6i-8xlarge", "Configures the markdown file to write test results.")
 
-func TestBrightenBenchmark(t *testing.T) {
+func TestBenchmarkBrighten(t *testing.T) {
 	tests := []struct {
 		name           string
 		originalImg    string
@@ -32,41 +32,9 @@ func TestBrightenBenchmark(t *testing.T) {
 			widthNew:       10,
 			heightNew:      10,
 		},
-		{
-			name:           "brighten_small",
-			originalImg:    "../sample/original-1000x1000.png",
-			widthStartNew:  0,
-			heightStartNew: 0,
-			widthNew:       100,
-			heightNew:      100,
-		},
-		{
-			name:           "brighten_medium",
-			originalImg:    "../sample/original-1000x1000.png",
-			widthStartNew:  0,
-			heightStartNew: 0,
-			widthNew:       250,
-			heightNew:      250,
-		},
-		{
-			name:           "brighten_large",
-			originalImg:    "../sample/original-1000x1000.png",
-			widthStartNew:  0,
-			heightStartNew: 0,
-			widthNew:       500,
-			heightNew:      500,
-		},
-		{
-			name:           "brighten_xlarge",
-			originalImg:    "../sample/original-1000x1000.png",
-			widthStartNew:  0,
-			heightStartNew: 0,
-			widthNew:       750,
-			heightNew:      750,
-		},
 	}
 
-	mdFilePath := *markdownFile
+	mdFilePath := path.Join(*resultsDir, "brighten.md")
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 

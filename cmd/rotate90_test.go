@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func TestRotate90Benchmark(t *testing.T) {
+func TestBenchmarkRotate90(t *testing.T) {
 	tests := []struct {
 		name           string
 		originalImg    string
@@ -62,7 +62,7 @@ func TestRotate90Benchmark(t *testing.T) {
 		},
 	}
 
-	mdFilePath := "../book/perf/rotate90.md"
+	mdFilePath := path.Join(*resultsDir, "rotate90.md")
 	mdFile, err := os.Create(mdFilePath)
 	require.NoError(t, err)
 
