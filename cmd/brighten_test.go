@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var resultsDir = flag.String("results-dir", "../book/perf/r6i-8xlarge", "Configures the markdown file to write test results.")
+var resultsDir = flag.String("results-dir", "../book/perf/mbp", "Configures the markdown file to write test results.")
 
 func TestBenchmarkBrighten(t *testing.T) {
 	tests := []struct {

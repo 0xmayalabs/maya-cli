@@ -28,3 +28,5 @@
     - [Rotate270](./perf/mbp/rotate270.md)
     - [Flip Vertical](./perf/mbp/flip-vertical.md)
     - [Flip Horizontal](./perf/mbp/flip-horizontal.md)
+  - [AWS r6i-8xlarge]
+    - [Crop](./perf/r6i-8xlarge/crop.md)
