@@ -43,8 +43,8 @@ ENTRYPOINT ["/usr/local/bin/maya"]
 CMD ["run"]
 
 # Used by GitHub to associate container with repo.
-LABEL org.opencontainers.image.source="https://github.com/LabsMaya/maya-cli"
+LABEL org.opencontainers.image.source="https://github.com/0xmayalabs/maya-cli"
 LABEL org.opencontainers.image.title="maya"
 LABEL org.opencontainers.image.description="Media ZK Proving benchmarking"
 LABEL org.opencontainers.image.licenses="GPL v3"
-LABEL org.opencontainers.image.documentation="https://github.com/LabsMaya/maya-docs/tree/main/docs"
+LABEL org.opencontainers.image.documentation="https://github.com/0xmayalabs/maya-docs/tree/main/docs"

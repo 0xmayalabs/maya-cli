@@ -7,7 +7,7 @@ title = "Maya Docs"
 description = "A book on all things maya cli"
 
 [output.html]
-git-repository-url = "https://github.com/LabsMaya/maya-cli"
+git-repository-url = "https://github.com/0xmayalabs/maya-cli"
 default-theme = "ayu"
 no-section-label = true
 
