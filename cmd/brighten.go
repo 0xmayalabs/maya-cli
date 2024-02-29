@@ -5,9 +5,9 @@ import (
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/consensys/gnark/std/math/cmp"
 	"github.com/spf13/cobra"
+	"io"
 	"os"
 	"path"
 	"time"
@@ -27,6 +27,7 @@ type brightenConfig struct {
 	brighteningFactor int // TODO(xenowits): Convert it to floating-point
 	proofDir          string
 	markdownFile      string
+	backend           string
 }
 
 // newBrightenCmd returns a new cobra.Command for brightening an image by a brightening factor.
@@ -51,6 +52,7 @@ func bindBrightenFlags(cmd *cobra.Command, conf *brightenConfig) {
 	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
 	cmd.Flags().IntVar(&conf.brighteningFactor, "brightening-factor", 2, "The factor with which image is brightened.")
+	cmd.Flags().StringVar(&conf.backend, "backend", "groth16", "The proving backend used for generating the proofs.")
 }
 
 // proveBrighten generates the zk proof of brightening an image by a brightening factor.
@@ -85,7 +87,7 @@ func proveBrighten(config brightenConfig) error {
 		return err
 	}
 
-	proof, vk, circuitCompilationDuration, provingDuration, err := generateBrightenProof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateBrightenProof(config.backend, originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -141,7 +143,7 @@ func proveBrighten(config brightenConfig) error {
 }
 
 // generateBrightenProof returns the zk proof of brightening an image by a brightening factor.
-func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
+func generateBrightenProof(backend string, original, brightened [][][]uint8) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
 	var circuit brightenCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -160,9 +162,9 @@ func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, gro
 	}
 
 	t0 := time.Now()
-	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &circuit)
+	cs, err := compileCircuit(backend, &circuit)
 	if err != nil {
-		panic(err)
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Brighten compilation time:", time.Since(t0).Seconds())
@@ -177,12 +179,7 @@ func generateBrightenProof(original, brightened [][][]uint8) (groth16.Proof, gro
 		return nil, nil, 0, 0, err
 	}
 
-	pk, vk, err := groth16.Setup(cs)
-	if err != nil {
-		return nil, nil, 0, 0, err
-	}
-
-	proof, err := groth16.Prove(cs, pk, witness)
+	proof, vk, err := generateProofByBackend(backend, cs, witness)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}

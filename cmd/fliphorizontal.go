@@ -5,8 +5,8 @@ import (
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/spf13/cobra"
+	"io"
 	"os"
 	"path"
 	"time"
@@ -18,6 +18,7 @@ type flipHorizontalConfig struct {
 	finalImg     string
 	proofDir     string
 	markdownFile string
+	backend      string
 }
 
 // newFlipHorizontalCmd returns a new cobra.Command for flipping an image horizontally.
@@ -41,6 +42,7 @@ func bindFlipHorizontalFlags(cmd *cobra.Command, conf *flipHorizontalConfig) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.finalImg, "final-image", "", "The path to the final image. Supported image formats: PNG.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
+	cmd.Flags().StringVar(&conf.backend, "backend", "groth16", "The proving backend used for generating the proofs.")
 }
 
 // proveFlipHorizontal generates the zk proof of flip horizontal transformation.
@@ -71,7 +73,7 @@ func proveFlipHorizontal(config flipHorizontalConfig) error {
 		return err
 	}
 
-	proof, vk, circuitCompilationDuration, provingDuration, err := generateFlipHorizontalProof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateFlipHorizontalProof(config.backend, originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -112,12 +114,13 @@ func proveFlipHorizontal(config flipHorizontalConfig) error {
 		}
 		defer mdFile.Close()
 
-		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d | %s |\n",
 			fmt.Sprintf("%dx%d", len(finalPixels),
 				len(finalPixels[0])),
 			circuitCompilationDuration.Seconds(),
 			provingDuration.Seconds(),
 			n,
+			config.backend,
 		); err != nil {
 			return err
 		}
@@ -127,7 +130,7 @@ func proveFlipHorizontal(config flipHorizontalConfig) error {
 }
 
 // generateFlipHorizontalProof returns the proof of flipHorizontal transformation.
-func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
+func generateFlipHorizontalProof(backend string, original, flipped [][][]uint8) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
 	var circuit FlipHorizontalCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -146,9 +149,9 @@ func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, 
 	}
 
 	t0 := time.Now()
-	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &circuit)
+	cs, err := compileCircuit(backend, &circuit)
 	if err != nil {
-		panic(err)
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Flip Horizontal compilation time:", time.Since(t0).Seconds())
@@ -163,12 +166,7 @@ func generateFlipHorizontalProof(original, flipped [][][]uint8) (groth16.Proof, 
 		return nil, nil, 0, 0, err
 	}
 
-	pk, vk, err := groth16.Setup(cs)
-	if err != nil {
-		return nil, nil, 0, 0, err
-	}
-
-	proof, err := groth16.Prove(cs, pk, witness)
+	proof, vk, err := generateProofByBackend(backend, cs, witness)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}
@@ -186,8 +184,7 @@ type FlipHorizontalCircuit struct {
 }
 
 func (c *FlipHorizontalCircuit) Define(api frontend.API) error {
-	api.AssertIsDifferent(len(c.Original), 0)
-	api.AssertIsDifferent(len(c.Flipped), 0)
+	// TODO(dhruv): Add AssertIsDifferent to compare len(Original) with 0.
 	api.AssertIsEqual(len(c.Original), len(c.Flipped))
 	api.AssertIsEqual(len(c.Original[0]), len(c.Flipped[0]))
 

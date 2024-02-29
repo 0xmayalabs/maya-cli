@@ -20,6 +20,7 @@ func TestBenchmarkCrop(t *testing.T) {
 		heightStartNew int
 		widthNew       int
 		heightNew      int
+		backend        string
 	}{
 		{
 			name:           "crop_xsmall",
@@ -28,6 +29,7 @@ func TestBenchmarkCrop(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       10,
 			heightNew:      10,
+			backend:        "groth16",
 		},
 		{
 			name:           "crop_small",
@@ -36,6 +38,7 @@ func TestBenchmarkCrop(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       100,
 			heightNew:      100,
+			backend:        "groth16",
 		},
 		{
 			name:           "crop_medium",
@@ -44,6 +47,7 @@ func TestBenchmarkCrop(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       250,
 			heightNew:      250,
+			backend:        "groth16",
 		},
 		{
 			name:           "crop_large",
@@ -52,6 +56,7 @@ func TestBenchmarkCrop(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       500,
 			heightNew:      500,
+			backend:        "groth16",
 		},
 		{
 			name:           "crop_xlarge",
@@ -60,6 +65,52 @@ func TestBenchmarkCrop(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       750,
 			heightNew:      750,
+			backend:        "groth16",
+		},
+		{
+			name:           "crop_xsmall",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       10,
+			heightNew:      10,
+			backend:        "plonk",
+		},
+		{
+			name:           "crop_small",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       100,
+			heightNew:      100,
+			backend:        "plonk",
+		},
+		{
+			name:           "crop_medium",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       250,
+			heightNew:      250,
+			backend:        "plonk",
+		},
+		{
+			name:           "crop_large",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       500,
+			heightNew:      500,
+			backend:        "plonk",
+		},
+		{
+			name:           "crop_xlarge",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       750,
+			heightNew:      750,
+			backend:        "plonk",
 		},
 	}
 
@@ -69,8 +120,8 @@ func TestBenchmarkCrop(t *testing.T) {
 
 	fmt.Fprintln(mdFile, "## Crop")
 	// Write the Markdown table headers
-	fmt.Fprintln(mdFile, "| Original Size | Final Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
-	fmt.Fprintln(mdFile, "|---|---|---|---|---|")
+	fmt.Fprintln(mdFile, "| Original Size | Final Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) | Backend |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|---|---|")
 	mdFile.Close()
 
 	for _, tt := range tests {
@@ -87,6 +138,7 @@ func TestBenchmarkCrop(t *testing.T) {
 				heightStartNew: tt.heightStartNew,
 				proofDir:       dir,
 				markdownFile:   mdFilePath,
+				backend:        tt.backend,
 			}
 			err := proveCrop(conf)
 			require.NoError(t, err)
