@@ -2,7 +2,7 @@
 
 To prove that an image is correctly flipped horizontally, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove flip-horizontal \
+docker run --rm -v "$(pwd):/opt/maya" 0xmayalabs/maya:latest prove flip-horizontal \
 --original-image=./sample/original.png \
 --final-image=./sample/flipped_horizontal.png \
 --proof-dir=proofs
@@ -10,7 +10,7 @@ docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest prove flip-horizontal
 
 To verify that an image is correctly flipped horizontally, run:
 ```shell
-docker run --rm -v "$(pwd):/opt/maya" labsmaya/maya:latest verify flip-horizontal \
+docker run --rm -v "$(pwd):/opt/maya" 0xmayalabs/maya:latest verify flip-horizontal \
 --final-image=./sample/flipped_horizontal.png \
 --proof-dir=proofs
 ```
