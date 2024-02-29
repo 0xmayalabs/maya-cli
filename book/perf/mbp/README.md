@@ -1,3 +1,3 @@
-## Macbook pro performance
+## Macbook Pro
 
-This performance is measured on Macbook Pro M1, 16GB RAM.
+The performance is measured on Macbook Pro M1, 10 cores of CPU & 16GB RAM.

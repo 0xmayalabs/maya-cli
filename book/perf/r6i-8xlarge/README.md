@@ -1,3 +1,4 @@
-## AWS r6i.8x performance
+## AWS EC2 R6i.8xlarge
 
-This performance is measured on [AWS EC2 r6i.8x](https://aws.amazon.com/ec2/instance-types/r6i/) instance.
+The performance is measured on [AWS EC2 R6i.8xlarge](https://aws.amazon.com/ec2/instance-types/r6i/) instance,
+with 32 cores of CPU and 256 GB RAM.

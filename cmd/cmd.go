@@ -31,8 +31,8 @@ func New() *cobra.Command {
 func newRootCmd(cmds ...*cobra.Command) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "maya",
-		Short: "Maya - Client for Maya network",
-		Long:  "Maya separates fake from the real.",
+		Short: "Maya CLI",
+		Long:  "Command line tool to create zero-knowledge proof of image transformations.",
 	}
 
 	root.AddCommand(cmds...)
@@ -43,8 +43,8 @@ func newRootCmd(cmds ...*cobra.Command) *cobra.Command {
 func newProveCmd(cmds ...*cobra.Command) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "prove",
-		Short: "Generates proof for the specified edit.",
-		Long:  "Generates zero knowledge proof of edit on the original image resulting in a new image.",
+		Short: "Generates proof for the specified transformation.",
+		Long:  "Generates zero knowledge proof of transformation on the original image resulting in a new image.",
 	}
 
 	root.AddCommand(cmds...)
@@ -55,8 +55,8 @@ func newProveCmd(cmds ...*cobra.Command) *cobra.Command {
 func newVerifyCmd(cmds ...*cobra.Command) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "verify",
-		Short: "Verifies proof for the specified edit.",
-		Long:  "Verifies the zero knowledge proof of edit on the original image resulting in a new image.",
+		Short: "Verifies proof for the specified transformation.",
+		Long:  "Verifies the zero knowledge proof of transformation on the original image resulting in a new image.",
 	}
 
 	root.AddCommand(cmds...)
