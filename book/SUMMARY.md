@@ -4,7 +4,7 @@
 
 # User Guide
 
-- [Installation](./installation.md)
+- [Install](./install.md)
 
 # Reference Guide
 
@@ -16,7 +16,6 @@
   - [Flip Vertical](./cli/flip-vertical.md)
   - [Flip Horizontal](./cli/flip-horizontal.md)
   - [Brighten](./cli/brighten.md)
-  - [Contrast](./cli/contrast.md)
 
 # Performance
 
@@ -28,7 +27,7 @@
     - [Rotate270](./perf/mbp/rotate270.md)
     - [Flip Vertical](./perf/mbp/flip-vertical.md)
     - [Flip Horizontal](./perf/mbp/flip-horizontal.md)
-  - [AWS r6i-8xlarge](./perf/r6i-8xlarge/README.md)
+  - [AWS EC2 r6i-8xlarge](./perf/r6i-8xlarge/README.md)
     - [Crop](./perf/r6i-8xlarge/crop.md)
     - [Rotate90](./perf/r6i-8xlarge/rotate90.md)
     - [Rotate180](./perf/r6i-8xlarge/rotate180.md)
