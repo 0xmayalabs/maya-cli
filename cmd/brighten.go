@@ -117,12 +117,13 @@ func proveBrighten(config brightenConfig) error {
 		}
 		defer mdFile.Close()
 
-		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d | %s |\n",
 			fmt.Sprintf("%dx%d", len(finalPixels),
 				len(finalPixels[0])),
 			circuitCompilationDuration.Seconds(),
 			provingDuration.Seconds(),
 			n,
+			config.backend,
 		); err != nil {
 			return err
 		}
