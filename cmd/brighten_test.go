@@ -23,6 +23,7 @@ func TestBenchmarkBrighten(t *testing.T) {
 		heightStartNew int
 		widthNew       int
 		heightNew      int
+		backend        string
 	}{
 		{
 			name:           "brighten_xsmall",
@@ -31,6 +32,16 @@ func TestBenchmarkBrighten(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       10,
 			heightNew:      10,
+			backend:        "groth16",
+		},
+		{
+			name:           "brighten_xsmall",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       10,
+			heightNew:      10,
+			backend:        "plonk",
 		},
 	}
 
@@ -43,8 +54,8 @@ func TestBenchmarkBrighten(t *testing.T) {
 	fmt.Fprintln(mdFile, fmt.Sprintf("#### Brightness factor: %d", brightness))
 
 	// Write the Markdown table headers
-	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
-	fmt.Fprintln(mdFile, "|---|---|---|---|")
+	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) | Backend |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|---|")
 	mdFile.Close()
 
 	for _, tt := range tests {
@@ -63,6 +74,7 @@ func TestBenchmarkBrighten(t *testing.T) {
 				proofDir:          dir,
 				brighteningFactor: brightness,
 				markdownFile:      mdFilePath,
+				backend:           tt.backend,
 			}
 			err = proveBrighten(conf)
 			require.NoError(t, err)
