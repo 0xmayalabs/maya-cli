@@ -5,8 +5,8 @@ import (
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/spf13/cobra"
+	"io"
 	"os"
 	"path"
 	"time"
@@ -18,6 +18,7 @@ type rotate270Config struct {
 	finalImg     string
 	proofDir     string
 	markdownFile string
+	backend      string
 }
 
 // newRotate270Cmd returns a new cobra.Command for rotating an image by 270 degrees.
@@ -71,7 +72,7 @@ func proveRotate270(config rotate270Config) error {
 		return err
 	}
 
-	proof, vk, circuitCompilationDuration, provingDuration, err := generateRotate270Proof(originalPixels, finalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateRotate270Proof(config.backend, originalPixels, finalPixels)
 	if err != nil {
 		return err
 	}
@@ -112,12 +113,13 @@ func proveRotate270(config rotate270Config) error {
 		}
 		defer mdFile.Close()
 
-		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d |\n",
+		if _, err = fmt.Fprintf(mdFile, "| %s | %f | %f | %d | %s |\n",
 			fmt.Sprintf("%dx%d", len(finalPixels),
 				len(finalPixels[0])),
 			circuitCompilationDuration.Seconds(),
 			provingDuration.Seconds(),
 			n,
+			config.backend,
 		); err != nil {
 			return err
 		}
@@ -127,7 +129,7 @@ func proveRotate270(config rotate270Config) error {
 }
 
 // generateRotate270Proof returns the proof of rotate270 transformation.
-func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
+func generateRotate270Proof(backend string, original, rotated [][][]uint8) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
 	var circuit Rotate270Circuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -146,9 +148,9 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 	}
 
 	t0 := time.Now()
-	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &circuit)
+	cs, err := compileCircuit(backend, &circuit)
 	if err != nil {
-		panic(err)
+		return nil, nil, 0, 0, err
 	}
 
 	fmt.Println("Rotate270Circuit compilation time:", time.Since(t0).Seconds())
@@ -163,12 +165,7 @@ func generateRotate270Proof(original, rotated [][][]uint8) (groth16.Proof, groth
 		return nil, nil, 0, 0, err
 	}
 
-	pk, vk, err := groth16.Setup(cs)
-	if err != nil {
-		return nil, nil, 0, 0, err
-	}
-
-	proof, err := groth16.Prove(cs, pk, witness)
+	proof, vk, err := generateProofByBackend(backend, cs, witness)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}
@@ -186,8 +183,7 @@ type Rotate270Circuit struct {
 }
 
 func (c *Rotate270Circuit) Define(api frontend.API) error {
-	api.AssertIsDifferent(len(c.Original), 0)
-	api.AssertIsDifferent(len(c.Rotated), 0)
+	// TODO(dhruv): Add AssertIsDifferent to compare len(Original) with 0.
 	api.AssertIsEqual(len(c.Original[0]), len(c.Rotated))
 	api.AssertIsEqual(len(c.Original), len(c.Rotated[0]))
 

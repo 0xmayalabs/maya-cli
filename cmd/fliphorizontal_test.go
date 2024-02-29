@@ -19,6 +19,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 		heightStartNew int
 		widthNew       int
 		heightNew      int
+		backend        string
 	}{
 		{
 			name:           "flip_horizontal_xsmall",
@@ -27,6 +28,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       10,
 			heightNew:      10,
+			backend:        "groth16",
 		},
 		{
 			name:           "flip_horizontal_small",
@@ -35,6 +37,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       100,
 			heightNew:      100,
+			backend:        "groth16",
 		},
 		{
 			name:           "flip_horizontal_medium",
@@ -43,6 +46,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       250,
 			heightNew:      250,
+			backend:        "groth16",
 		},
 		{
 			name:           "flip_horizontal_large",
@@ -51,6 +55,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       500,
 			heightNew:      500,
+			backend:        "groth16",
 		},
 		{
 			name:           "flip_horizontal_xlarge",
@@ -59,6 +64,52 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 			heightStartNew: 0,
 			widthNew:       750,
 			heightNew:      750,
+			backend:        "groth16",
+		},
+		{
+			name:           "flip_horizontal_xsmall",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       10,
+			heightNew:      10,
+			backend:        "plonk",
+		},
+		{
+			name:           "flip_horizontal_small",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       100,
+			heightNew:      100,
+			backend:        "plonk",
+		},
+		{
+			name:           "flip_horizontal_medium",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       250,
+			heightNew:      250,
+			backend:        "plonk",
+		},
+		{
+			name:           "flip_horizontal_large",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       500,
+			heightNew:      500,
+			backend:        "plonk",
+		},
+		{
+			name:           "flip_horizontal_xlarge",
+			originalImg:    "../sample/original-1000x1000.png",
+			widthStartNew:  0,
+			heightStartNew: 0,
+			widthNew:       750,
+			heightNew:      750,
+			backend:        "plonk",
 		},
 	}
 
@@ -68,8 +119,8 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 
 	fmt.Fprintln(mdFile, "## Flip horizontal")
 	// Write the Markdown table headers
-	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) |")
-	fmt.Fprintln(mdFile, "|---|---|---|---|")
+	fmt.Fprintln(mdFile, "| Original Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) | Backend |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|---|")
 	mdFile.Close()
 
 	for _, tt := range tests {
@@ -87,6 +138,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 				finalImg:     finalImg,
 				proofDir:     dir,
 				markdownFile: mdFilePath,
+				backend:      tt.backend,
 			}
 			err = proveFlipHorizontal(conf)
 			require.NoError(t, err)

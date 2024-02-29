@@ -5,7 +5,6 @@ import (
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/spf13/cobra"
 	"image/png"
 	"io"
@@ -24,6 +23,7 @@ type cropConfig struct {
 	heightStartNew int
 	proofDir       string
 	markdownFile   string
+	backend        string
 }
 
 // newCropCmd returns a new cobra.Command for cropping.
@@ -49,6 +49,7 @@ func bindFlags(cmd *cobra.Command, conf *cropConfig) {
 	cmd.Flags().IntVar(&conf.widthStartNew, "width-start-new", 0, "The Original-coordinate for the top-left corner of the cropped image, relative to the original image's width.")
 	cmd.Flags().IntVar(&conf.heightStartNew, "height-start-new", 0, "The Cropped-coordinate for the top-left corner of the cropped image, relative to the original image's height.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
+	cmd.Flags().StringVar(&conf.backend, "backend", "groth16", "The proving backend used for generating the proofs.")
 }
 
 // proveCrop generates the zk proof of crop transformation.
@@ -82,7 +83,7 @@ func proveCrop(config cropConfig) error {
 		return err
 	}
 
-	proof, vk, circuitCompilationDuration, provingDuration, err := generateProof(finalPixels, originalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := generateCropProof(config.backend, finalPixels, originalPixels)
 	if err != nil {
 		return err
 	}
@@ -107,7 +108,7 @@ func proveCrop(config cropConfig) error {
 		}
 		defer mdFile.Close()
 
-		if _, err = fmt.Fprintf(mdFile, "| %s | %s | %f | %f | %d |\n",
+		if _, err = fmt.Fprintf(mdFile, "| %s | %s | %f | %f | %d | %s |\n",
 			fmt.Sprintf("%dx%d", len(originalPixels),
 				len(originalPixels[0])),
 			fmt.Sprintf("%dx%d", len(finalPixels),
@@ -115,6 +116,7 @@ func proveCrop(config cropConfig) error {
 			circuitCompilationDuration.Seconds(),
 			provingDuration.Seconds(),
 			n,
+			config.backend,
 		); err != nil {
 			return err
 		}
@@ -162,8 +164,8 @@ func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 	return pixels, nil
 }
 
-// generateProof returns the proof of crop transformation.
-func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.VerifyingKey, time.Duration, time.Duration, error) {
+// generateCropProof returns the proof of crop transformation.
+func generateCropProof(backend string, cropped, original [][][]uint8) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
 	var circuit CropCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -182,7 +184,7 @@ func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.Verify
 	}
 
 	t0 := time.Now()
-	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &circuit)
+	cs, err := compileCircuit(backend, &circuit)
 	if err != nil {
 		panic(err)
 	}
@@ -199,12 +201,7 @@ func generateProof(cropped, original [][][]uint8) (groth16.Proof, groth16.Verify
 		return nil, nil, 0, 0, err
 	}
 
-	pk, vk, err := groth16.Setup(cs)
-	if err != nil {
-		return nil, nil, 0, 0, err
-	}
-
-	proof, err := groth16.Prove(cs, pk, witness)
+	proof, vk, err := generateProofByBackend(backend, cs, witness)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}
