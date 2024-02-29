@@ -6,8 +6,6 @@ The Maya CLI is a 100% open source, contributor-friendly command line tool writt
 | [Docs](https://docs.mayalabs.tech)
 | [Telegram](https://t.me/+hM1lNjgLFRdjMGE1)
 
-Okay
-
 ## Benchmark
 
 We have run benchmark tests on [Macbook Pro M1](https://www.apple.com/in/shop/buy-mac/macbook-pro/16-inch-macbook-pro), 16GB RAM as well as 
