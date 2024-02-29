@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [main]
+    branches: *
 
 name: Build and Publish Docker Image
 jobs:
