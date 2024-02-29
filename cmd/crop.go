@@ -45,7 +45,7 @@ func newCropCmd() *cobra.Command {
 // bindFlags binds the crop configuration flags.
 func bindFlags(cmd *cobra.Command, conf *cropConfig) {
 	cmd.Flags().StringVar(&conf.originalImg, "original-image", "", "The path to the original image. Supported image formats: PNG.")
-	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: PNG.")
+	cmd.Flags().StringVar(&conf.croppedImg, "final-image", "", "The path to the cropped image. Supported image formats: PNG.")
 	cmd.Flags().IntVar(&conf.widthStartNew, "width-start-new", 0, "The Original-coordinate for the top-left corner of the cropped image, relative to the original image's width.")
 	cmd.Flags().IntVar(&conf.heightStartNew, "height-start-new", 0, "The Cropped-coordinate for the top-left corner of the cropped image, relative to the original image's height.")
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
@@ -246,7 +246,7 @@ func newVerifyCropCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
-	cmd.Flags().StringVar(&conf.croppedImg, "cropped-image", "", "The path to the cropped image. Supported image formats: PNG.")
+	cmd.Flags().StringVar(&conf.croppedImg, "final-image", "", "The path to the cropped image. Supported image formats: PNG.")
 
 	return cmd
 }
