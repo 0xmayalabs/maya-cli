@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
@@ -12,8 +13,6 @@ import (
 	"path"
 	"time"
 )
-
-var heightStartNew, widthStartNew int
 
 // cropConfig specifies the configuration for cropping an image.
 type cropConfig struct {
@@ -54,9 +53,6 @@ func bindFlags(cmd *cobra.Command, conf *cropConfig) {
 
 // proveCrop generates the zk proof of crop transformation.
 func proveCrop(config cropConfig) error {
-	widthStartNew = config.widthStartNew
-	heightStartNew = config.heightStartNew
-
 	// Open the original image file.
 	originalImage, err := os.Open(config.originalImg)
 	if err != nil {
@@ -83,7 +79,7 @@ func proveCrop(config cropConfig) error {
 		return err
 	}
 
-	proof, vk, circuitCompilationDuration, provingDuration, err := generateCropProof(config.backend, finalPixels, originalPixels)
+	proof, vk, circuitCompilationDuration, provingDuration, err := GenerateCropProof(originalPixels, finalPixels, config.backend, config.widthStartNew, config.heightStartNew)
 	if err != nil {
 		return err
 	}
@@ -164,8 +160,8 @@ func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 	return pixels, nil
 }
 
-// generateCropProof returns the proof of crop transformation.
-func generateCropProof(backend string, cropped, original [][][]uint8) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
+// GenerateCropProof returns the proof of crop transformation.
+func GenerateCropProof(original, cropped [][][]uint8, backend string, widthStartNew, heightStartNew int) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
 	var circuit CropCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -183,6 +179,9 @@ func generateCropProof(backend string, cropped, original [][][]uint8) (io.Writer
 		}
 	}
 
+	circuit.HeightStartNew = heightStartNew
+	circuit.WidthStartNew = widthStartNew
+
 	t0 := time.Now()
 	cs, err := compileCircuit(backend, &circuit)
 	if err != nil {
@@ -194,8 +193,10 @@ func generateCropProof(backend string, cropped, original [][][]uint8) (io.Writer
 
 	t0 = time.Now()
 	witness, err := frontend.NewWitness(&CropCircuit{
-		Original: convertToFrontendVariable(original),
-		Cropped:  convertToFrontendVariable(cropped),
+		Original:       convertToFrontendVariable(original),
+		Cropped:        convertToFrontendVariable(cropped),
+		HeightStartNew: heightStartNew,
+		WidthStartNew:  widthStartNew,
 	}, ecc.BN254.ScalarField())
 	if err != nil {
 		return nil, nil, 0, 0, err
@@ -291,6 +292,7 @@ func verifyCrop(config verifyCropConfig) error {
 	err = groth16.Verify(proof, vk, publicWitness)
 	if err != nil {
 		fmt.Println("Invalid proof 😞")
+		return errors.New("invalid proof")
 	} else {
 		fmt.Println("Proof verified 🎉")
 	}
@@ -334,17 +336,19 @@ func readVerifyingKey(verifyingKeyPath string) (groth16.VerifyingKey, error) {
 
 // CropCircuit represents the arithmetic circuit to prove crop transformations.
 type CropCircuit struct {
-	Original [][][]frontend.Variable `gnark:",secret"`
-	Cropped  [][][]frontend.Variable `gnark:",public"`
+	Original       [][][]frontend.Variable `gnark:",secret"`
+	Cropped        [][][]frontend.Variable `gnark:",public"`
+	WidthStartNew  int
+	HeightStartNew int
 }
 
 func (c *CropCircuit) Define(api frontend.API) error {
 	// The pixel values for the original and cropped images must match exactly.
 	for i := 0; i < len(c.Cropped); i++ {
 		for j := 0; j < len(c.Cropped[i]); j++ {
-			api.AssertIsEqual(c.Cropped[i][j][0], c.Original[i+heightStartNew][j+widthStartNew][0]) // R
-			api.AssertIsEqual(c.Cropped[i][j][1], c.Original[i+heightStartNew][j+widthStartNew][1]) // G
-			api.AssertIsEqual(c.Cropped[i][j][2], c.Original[i+heightStartNew][j+widthStartNew][2]) // B
+			api.AssertIsEqual(c.Cropped[i][j][0], c.Original[i+c.HeightStartNew][j+c.WidthStartNew][0]) // R
+			api.AssertIsEqual(c.Cropped[i][j][1], c.Original[i+c.HeightStartNew][j+c.WidthStartNew][1]) // G
+			api.AssertIsEqual(c.Cropped[i][j][2], c.Original[i+c.HeightStartNew][j+c.WidthStartNew][2]) // B
 		}
 	}
 

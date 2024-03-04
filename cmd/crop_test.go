@@ -129,7 +129,7 @@ func TestBenchmarkCrop(t *testing.T) {
 			dir := t.TempDir()
 
 			finalImg := path.Join(dir, "final.png")
-			cropImage(t, tt.originalImg, finalImg, tt.widthNew, tt.heightNew)
+			cropImage(t, tt.originalImg, finalImg, tt.widthNew, tt.heightNew, tt.widthStartNew, tt.heightStartNew)
 
 			conf := cropConfig{
 				originalImg:    tt.originalImg,
@@ -146,7 +146,7 @@ func TestBenchmarkCrop(t *testing.T) {
 	}
 }
 
-func cropImage(t *testing.T, original, final string, widthNew, heightNew int) {
+func cropImage(t *testing.T, original, final string, widthNew, heightNew, widthStartNew, heightStartNew int) {
 	t0 := time.Now()
 	imgFile, err := os.Open(original)
 	require.NoError(t, err)
@@ -156,7 +156,7 @@ func cropImage(t *testing.T, original, final string, widthNew, heightNew int) {
 	require.NoError(t, err)
 
 	// The rectangle is defined by the top-left and bottom-right points: (x0, y0, x1, y1)
-	cropRect := image.Rect(0, 0, widthNew, heightNew)
+	cropRect := image.Rect(widthStartNew, heightStartNew, widthNew, heightNew)
 
 	// Create a new blank image with the size of the crop rectangle
 	croppedImg := image.NewRGBA(cropRect)
@@ -179,17 +179,18 @@ func TestCrop(t *testing.T) {
 	proofDir := t.TempDir()
 	conf := cropConfig{
 		originalImg:    "../sample/original.png",
-		croppedImg:     "../sample/cropped.png",
-		widthStartNew:  0,
-		heightStartNew: 0,
+		croppedImg:     "../sample/cropped2.png",
+		widthStartNew:  2,
+		heightStartNew: 2,
 		proofDir:       proofDir,
+		backend:        "groth16",
 	}
 
 	err := proveCrop(conf)
 	require.NoError(t, err)
 
 	verifyConf := verifyCropConfig{
-		croppedImg: "../sample/cropped.png",
+		croppedImg: "../sample/cropped2.png",
 		proofDir:   proofDir,
 	}
 

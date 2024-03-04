@@ -128,7 +128,7 @@ func TestBenchmarkFlipHorizontal(t *testing.T) {
 			dir := t.TempDir()
 
 			croppedImg := path.Join(dir, "cropped.png")
-			cropImage(t, tt.originalImg, croppedImg, tt.widthNew, tt.heightNew)
+			cropImage(t, tt.originalImg, croppedImg, tt.widthNew, tt.heightNew, 0, 0)
 
 			finalImg := path.Join(dir, "final.png")
 			flipHorizontal(t, croppedImg, finalImg)
