@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
@@ -90,7 +91,7 @@ func proveCrop(config cropConfig) error {
 	}
 	defer proofFile.Close()
 
-	n, err := proof.WriteTo(proofFile)
+	n, err := proofFile.Write(proof)
 	if err != nil {
 		return err
 	}
@@ -124,7 +125,7 @@ func proveCrop(config cropConfig) error {
 	}
 	defer vkFile.Close()
 
-	_, err = vk.WriteTo(vkFile)
+	_, err = vkFile.Write(vk)
 	if err != nil {
 		return err
 	}
@@ -161,7 +162,7 @@ func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
 }
 
 // GenerateCropProof returns the proof of crop transformation.
-func GenerateCropProof(original, cropped [][][]uint8, backend string, widthStartNew, heightStartNew int) (io.WriterTo, io.WriterTo, time.Duration, time.Duration, error) {
+func GenerateCropProof(original, cropped [][][]uint8, backend string, widthStartNew, heightStartNew int) ([]byte, []byte, time.Duration, time.Duration, error) {
 	var circuit CropCircuit
 	circuit.Original = make([][][]frontend.Variable, len(original)) // First dimension
 	for i := range original {
@@ -210,7 +211,21 @@ func GenerateCropProof(original, cropped [][][]uint8, backend string, widthStart
 	fmt.Printf("Time taken to prove: %vs\n", time.Since(t0).Seconds())
 	proofDuration := time.Since(t0)
 
-	return proof, vk, circuitCompilationDuration, proofDuration, nil
+	var proofBytes []byte
+	buf := bytes.NewBuffer(proofBytes)
+	_, err = proof.WriteTo(buf)
+	if err != nil {
+		return nil, nil, 0, 0, err
+	}
+
+	var vkBytes []byte
+	buf = bytes.NewBuffer(vkBytes)
+	_, err = vk.WriteTo(buf)
+	if err != nil {
+		return nil, nil, 0, 0, err
+	}
+
+	return proofBytes, vkBytes, circuitCompilationDuration, proofDuration, nil
 }
 
 func convertToFrontendVariable(arr [][][]uint8) [][][]frontend.Variable {
