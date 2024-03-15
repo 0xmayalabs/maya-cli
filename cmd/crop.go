@@ -211,21 +211,19 @@ func GenerateCropProof(original, cropped [][][]uint8, backend string, widthStart
 	fmt.Printf("Time taken to prove: %vs\n", time.Since(t0).Seconds())
 	proofDuration := time.Since(t0)
 
-	var proofBytes []byte
-	buf := bytes.NewBuffer(proofBytes)
-	_, err = proof.WriteTo(buf)
+	proofBuf := new(bytes.Buffer)
+	_, err = proof.WriteTo(proofBuf)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}
 
-	var vkBytes []byte
-	buf = bytes.NewBuffer(vkBytes)
-	_, err = vk.WriteTo(buf)
+	vkBuf := new(bytes.Buffer)
+	_, err = vk.WriteTo(vkBuf)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}
 
-	return proofBytes, vkBytes, circuitCompilationDuration, proofDuration, nil
+	return proofBuf.Bytes(), vkBuf.Bytes(), circuitCompilationDuration, proofDuration, nil
 }
 
 func convertToFrontendVariable(arr [][][]uint8) [][][]frontend.Variable {
