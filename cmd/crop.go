@@ -91,12 +91,25 @@ func proveCrop(config cropConfig) error {
 	}
 	defer proofFile.Close()
 
-	n, err := proofFile.Write(proof)
+	proofSize, err := proofFile.Write(proof)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Proof size: ", n)
+	fmt.Println("Proof size: ", proofSize)
+
+	vkFile, err := os.Create(path.Join(config.proofDir, "vkey.bin"))
+	if err != nil {
+		return err
+	}
+	defer vkFile.Close()
+
+	vkSize, err := vkFile.Write(vk)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Verifying key size: ", vkSize)
 
 	if config.markdownFile != "" {
 		mdFile, err := os.OpenFile(config.markdownFile, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0755)
@@ -105,29 +118,19 @@ func proveCrop(config cropConfig) error {
 		}
 		defer mdFile.Close()
 
-		if _, err = fmt.Fprintf(mdFile, "| %s | %s | %f | %f | %d | %s |\n",
+		if _, err = fmt.Fprintf(mdFile, "| %s | %s | %f | %f | %d | %d | %s |\n",
 			fmt.Sprintf("%dx%d", len(originalPixels),
 				len(originalPixels[0])),
 			fmt.Sprintf("%dx%d", len(finalPixels),
 				len(finalPixels[0])),
 			circuitCompilationDuration.Seconds(),
 			provingDuration.Seconds(),
-			n,
+			proofSize,
+			vkSize,
 			config.backend,
 		); err != nil {
 			return err
 		}
-	}
-
-	vkFile, err := os.Create(path.Join(config.proofDir, "vkey.bin"))
-	if err != nil {
-		return err
-	}
-	defer vkFile.Close()
-
-	_, err = vkFile.Write(vk)
-	if err != nil {
-		return err
 	}
 
 	return nil
