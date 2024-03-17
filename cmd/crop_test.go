@@ -120,8 +120,8 @@ func TestBenchmarkCrop(t *testing.T) {
 
 	fmt.Fprintln(mdFile, "## Crop")
 	// Write the Markdown table headers
-	fmt.Fprintln(mdFile, "| Original Size | Final Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) | Backend |")
-	fmt.Fprintln(mdFile, "|---|---|---|---|---|---|")
+	fmt.Fprintln(mdFile, "| Original Size | Final Size | Circuit compilation (s) | Proving time (s) | Proof size (bytes) | Verifying Key size (bytes) | Backend |")
+	fmt.Fprintln(mdFile, "|---|---|---|---|---|---|---|")
 	mdFile.Close()
 
 	for _, tt := range tests {
