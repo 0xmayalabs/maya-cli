@@ -47,18 +47,16 @@ func bindRotate270Flags(cmd *cobra.Command, conf *rotate270Config) {
 // proveRotate270 generates the zk proof of rotated transformation 270.
 func proveRotate270(config rotate270Config) error {
 	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
+	originalImage, err := loadImage(config.originalImg)
 	if err != nil {
 		return err
 	}
-	defer originalImage.Close()
 
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the original image.
 	originalPixels, err := convertImgToPixels(originalImage)
@@ -225,11 +223,10 @@ func newVerifyRotate270Cmd() *cobra.Command {
 // verifyRotate270 verifies the zk proof of rotate270 transformation.
 func verifyRotate270(config verifyRotate270Config) error {
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the final image.
 	finalPixels, err := convertImgToPixels(finalImage)

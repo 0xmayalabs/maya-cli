@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
@@ -13,7 +14,9 @@ import (
 	"github.com/consensys/gnark/frontend/cs/scs"
 	"github.com/consensys/gnark/test"
 	"github.com/spf13/cobra"
+	"image"
 	"io"
+	"os"
 )
 
 // New returns a new cobra command that handles maya cli commands and subcommands.
@@ -122,4 +125,91 @@ func generateProofByBackend(backend string, cs constraint.ConstraintSystem, witn
 	default:
 		return nil, nil, errors.New(fmt.Sprintf("invalid backend, %s", backend))
 	}
+}
+
+// VerifyProofByBackend verifies the given proof by provided proof system backend.
+func VerifyProofByBackend(backend, transformation string, proof, vk []byte, finalImg image.Image) error {
+	pubWit, err := publicWitness(transformation, finalImg)
+	if err != nil {
+		return err
+	}
+
+	switch backend {
+	case "groth16":
+		grothProof := groth16.NewProof(ecc.BN254)
+		_, err := grothProof.ReadFrom(bytes.NewBuffer(proof))
+		if err != nil {
+			return err
+		}
+
+		grothVk := groth16.NewVerifyingKey(ecc.BN254)
+		_, err = grothVk.ReadFrom(bytes.NewBuffer(vk))
+		if err != nil {
+			return err
+		}
+
+		return groth16.Verify(grothProof, grothVk, pubWit)
+	case "plonk":
+		plonkProof := plonk.NewProof(ecc.BN254)
+		_, err := plonkProof.ReadFrom(bytes.NewBuffer(proof))
+		if err != nil {
+			return err
+		}
+
+		plonkVk := plonk.NewVerifyingKey(ecc.BN254)
+		_, err = plonkVk.ReadFrom(bytes.NewBuffer(vk))
+		if err != nil {
+			return err
+		}
+
+		return plonk.Verify(plonkProof, plonkVk, pubWit)
+	default:
+		return errors.New(fmt.Sprintf("invalid backend, %s", backend))
+	}
+}
+
+// publicWitness returns public witness for the given transformation.
+func publicWitness(transformation string, finalImg image.Image) (witness.Witness, error) {
+	pixels, err := convertImgToPixels(finalImg)
+	if err != nil {
+		return nil, err
+	}
+
+	switch transformation {
+	case "crop":
+		wt, err := frontend.NewWitness(&CropCircuit{
+			Cropped: convertToFrontendVariable(pixels),
+		}, ecc.BN254.ScalarField())
+		if err != nil {
+			return nil, err
+		}
+
+		return wt.Public()
+	case "flip_horizontal":
+		wt, err := frontend.NewWitness(&FlipHorizontalCircuit{
+			Flipped: convertToFrontendVariable(pixels),
+		}, ecc.BN254.ScalarField())
+		if err != nil {
+			return nil, err
+		}
+
+		return wt.Public()
+	default:
+		return nil, errors.New("invalid transformation")
+	}
+}
+
+func loadImage(path string) (image.Image, error) {
+	imgFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer imgFile.Close()
+
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return img, nil
 }

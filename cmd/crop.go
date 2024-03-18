@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
 	"github.com/spf13/cobra"
-	"image/png"
+	"image"
 	"io"
 	"os"
 	"path"
@@ -55,27 +54,25 @@ func bindFlags(cmd *cobra.Command, conf *cropConfig) {
 // proveCrop generates the zk proof of crop transformation.
 func proveCrop(config cropConfig) error {
 	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
+	oImg, err := loadImage(config.originalImg)
 	if err != nil {
 		return err
 	}
-	defer originalImage.Close()
 
 	// Open the cropped image file.
-	croppedImage, err := os.Open(config.croppedImg)
+	cImg, err := loadImage(config.croppedImg)
 	if err != nil {
 		return err
 	}
-	defer croppedImage.Close()
 
 	// Get the pixel values for the original image.
-	originalPixels, err := convertImgToPixels(originalImage)
+	originalPixels, err := convertImgToPixels(oImg)
 	if err != nil {
 		return err
 	}
 
 	// Get the pixel values for the cropped image.
-	finalPixels, err := convertImgToPixels(croppedImage)
+	finalPixels, err := convertImgToPixels(cImg)
 	if err != nil {
 		return err
 	}
@@ -134,13 +131,7 @@ func proveCrop(config cropConfig) error {
 }
 
 // convertImgToPixels returns a 3D array of pixel values for the provided image.
-func convertImgToPixels(file io.Reader) ([][][]uint8, error) {
-	// Decode the image.
-	img, err := png.Decode(file)
-	if err != nil {
-		return nil, err
-	}
-
+func convertImgToPixels(img image.Image) ([][][]uint8, error) {
 	// Get the image bounds.
 	bounds := img.Bounds()
 	width, height := bounds.Dx(), bounds.Dy()
@@ -246,6 +237,7 @@ func convertToFrontendVariable(arr [][][]uint8) [][][]frontend.Variable {
 type verifyCropConfig struct {
 	proofDir   string
 	croppedImg string
+	backend    string
 }
 
 // newVerifyCropCmd returns a new cobra.Command for cropping.
@@ -261,6 +253,7 @@ func newVerifyCropCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&conf.proofDir, "proof-dir", "", "The path to the proof directory.")
 	cmd.Flags().StringVar(&conf.croppedImg, "final-image", "", "The path to the cropped image. Supported image formats: PNG.")
+	cmd.Flags().StringVar(&conf.backend, "backend", "", "The proof backend used to generate proof. Supported: groth16 and plonk.")
 
 	return cmd
 }
@@ -268,49 +261,43 @@ func newVerifyCropCmd() *cobra.Command {
 // verifyCrop verifies the zk proof of crop transformation.
 func verifyCrop(config verifyCropConfig) error {
 	// Open the cropped image file.
-	croppedImage, err := os.Open(config.croppedImg)
+	cImgFile, err := os.Open(config.croppedImg)
 	if err != nil {
 		return err
 	}
-	defer croppedImage.Close()
+	defer cImgFile.Close()
 
-	// Get the pixel values for the cropped image.
-	croppedPixels, err := convertImgToPixels(croppedImage)
-	if err != nil {
-		return err
-	}
-
-	witness, err := frontend.NewWitness(&CropCircuit{
-		Cropped: convertToFrontendVariable(croppedPixels),
-	}, ecc.BN254.ScalarField())
+	cImg, _, err := image.Decode(cImgFile)
 	if err != nil {
 		return err
 	}
 
-	proof, err := readProof(path.Join(config.proofDir, "proof.bin"))
+	proof, err := readFromFile(path.Join(config.proofDir, "proof.bin"))
 	if err != nil {
 		return err
 	}
 
-	vk, err := readVerifyingKey(path.Join(config.proofDir, "vkey.bin"))
+	vk, err := readFromFile(path.Join(config.proofDir, "vkey.bin"))
 	if err != nil {
 		return err
 	}
 
-	publicWitness, err := witness.Public()
-	if err != nil {
-		return err
-	}
-
-	err = groth16.Verify(proof, vk, publicWitness)
-	if err != nil {
-		fmt.Println("Invalid proof 😞")
-		return errors.New("invalid proof")
-	} else {
+	err = VerifyProofByBackend(config.backend, "crop", proof, vk, cImg)
+	if err == nil {
 		fmt.Println("Proof verified 🎉")
 	}
 
-	return nil
+	return err
+}
+
+func readFromFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return io.ReadAll(file)
 }
 
 // readProof returns the zk proof by reading it from the disk.

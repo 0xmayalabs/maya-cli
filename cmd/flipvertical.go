@@ -48,18 +48,16 @@ func bindFlipVerticalFlags(cmd *cobra.Command, conf *flipVerticalConfig) {
 // proveFlipVertical generates the zk proof of flip vertical transformation.
 func proveFlipVertical(config flipVerticalConfig) error {
 	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
+	originalImage, err := loadImage(config.originalImg)
 	if err != nil {
 		return err
 	}
-	defer originalImage.Close()
 
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the original image.
 	originalPixels, err := convertImgToPixels(originalImage)
@@ -226,11 +224,10 @@ func newVerifyFlipVerticalCmd() *cobra.Command {
 // verifyFlipVertical verifies the zk proof of flip vertical transformation.
 func verifyFlipVertical(config verifyFlipVerticalConfig) error {
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the final image.
 	finalPixels, err := convertImgToPixels(finalImage)
