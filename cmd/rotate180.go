@@ -48,18 +48,16 @@ func bindRotate180Flags(cmd *cobra.Command, conf *rotate180Config) {
 // proveRotate180 generates the zk proof of rotated transformation 180.
 func proveRotate180(config rotate180Config) error {
 	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
+	originalImage, err := loadImage(config.originalImg)
 	if err != nil {
 		return err
 	}
-	defer originalImage.Close()
 
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the original image.
 	originalPixels, err := convertImgToPixels(originalImage)
@@ -229,11 +227,10 @@ func newVerifyRotate180Cmd() *cobra.Command {
 // verifyRotate180Crop verifies the zk proof of rotate180 transformation.
 func verifyRotate180Crop(config verifyRotate180Config) error {
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the final image.
 	finalPixels, err := convertImgToPixels(finalImage)

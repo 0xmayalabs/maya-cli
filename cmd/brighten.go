@@ -62,18 +62,16 @@ func proveBrighten(config brightenConfig) error {
 	fmt.Println("Brightening factor", brighteningFactor)
 
 	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
+	originalImage, err := loadImage(config.originalImg)
 	if err != nil {
 		return err
 	}
-	defer originalImage.Close()
 
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the original image.
 	originalPixels, err := convertImgToPixels(originalImage)
@@ -252,11 +250,10 @@ func newVerifyBrightenCmd() *cobra.Command {
 // verifyBrighten verifies the zk proof of brightening an image by a brightening factor.
 func verifyBrighten(config verifyBrightenConfig) error {
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the final image.
 	finalPixels, err := convertImgToPixels(finalImage)

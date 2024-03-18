@@ -48,18 +48,16 @@ func bindRotate90Flags(cmd *cobra.Command, conf *rotate90Config) {
 // proveRotate90 generates the zk proof of rotate 90 transformation.
 func proveRotate90(config rotate90Config) error {
 	// Open the original image file.
-	originalImage, err := os.Open(config.originalImg)
+	originalImage, err := loadImage(config.originalImg)
 	if err != nil {
 		return err
 	}
-	defer originalImage.Close()
 
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the original image.
 	originalPixels, err := convertImgToPixels(originalImage)
@@ -226,11 +224,10 @@ func newVerifyRotate90Cmd() *cobra.Command {
 // verifyRotate90 verifies the zk proof of rotate90 transformation.
 func verifyRotate90(config verifyRotate90Config) error {
 	// Open the final image file.
-	finalImage, err := os.Open(config.finalImg)
+	finalImage, err := loadImage(config.finalImg)
 	if err != nil {
 		return err
 	}
-	defer finalImage.Close()
 
 	// Get the pixel values for the final image.
 	finalPixels, err := convertImgToPixels(finalImage)
